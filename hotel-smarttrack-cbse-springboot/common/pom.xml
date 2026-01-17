@@ -23,6 +23,12 @@
             <artifactId>jakarta.persistence-api</artifactId>
         </dependency>
         
+        <!-- Spring Data JPA for repository interfaces -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        
         <!-- Lombok for reducing boilerplate (optional) -->
         <dependency>
             <groupId>org.projectlombok</groupId>
