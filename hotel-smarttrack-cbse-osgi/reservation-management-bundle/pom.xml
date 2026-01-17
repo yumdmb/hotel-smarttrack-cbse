@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    
+    <parent>
+        <groupId>com.hotel.smarttrack.osgi</groupId>
+        <artifactId>hotel-smarttrack-cbse-osgi</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>reservation-management-bundle</artifactId>
+    <packaging>jar</packaging>
+    
+    <name>Hotel SmartTrack - Reservation Management Bundle</name>
+    <description>Reservation Management component with ReservationManager implementation</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.hotel.smarttrack.osgi</groupId>
+            <artifactId>common-bundle</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi.core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.component.annotations</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>biz.aQute.bnd</groupId>
+                <artifactId>bnd-maven-plugin</artifactId>
+                <configuration>
+                    <bnd><![CDATA[
+Bundle-SymbolicName: ${project.artifactId}
+Bundle-Name: ${project.name}
+Bundle-Version: ${project.version}
+Private-Package: com.hotel.smarttrack.reservation.impl
+Import-Package: \
+    com.hotel.smarttrack.entity,\
+    com.hotel.smarttrack.service,\
+    *
+-dsannotations: *
+                    ]]></bnd>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

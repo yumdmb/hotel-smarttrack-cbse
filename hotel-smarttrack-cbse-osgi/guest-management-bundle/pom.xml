@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    
+    <parent>
+        <groupId>com.hotel.smarttrack.osgi</groupId>
+        <artifactId>hotel-smarttrack-cbse-osgi</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>guest-management-bundle</artifactId>
+    <packaging>jar</packaging>
+    
+    <name>Hotel SmartTrack - Guest Management Bundle</name>
+    <description>Guest Management component with GuestManager implementation</description>
+
+    <dependencies>
+        <!-- Common Bundle (entities + service interfaces) -->
+        <dependency>
+            <groupId>com.hotel.smarttrack.osgi</groupId>
+            <artifactId>common-bundle</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        
+        <!-- OSGi Core API -->
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi.core</artifactId>
+        </dependency>
+        
+        <!-- OSGi Annotations for Declarative Services -->
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.component.annotations</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>biz.aQute.bnd</groupId>
+                <artifactId>bnd-maven-plugin</artifactId>
+                <configuration>
+                    <bnd><![CDATA[
+Bundle-SymbolicName: ${project.artifactId}
+Bundle-Name: ${project.name}
+Bundle-Version: ${project.version}
+Private-Package: com.hotel.smarttrack.guest.impl
+Import-Package: \
+    com.hotel.smarttrack.entity,\
+    com.hotel.smarttrack.service,\
+    *
+-dsannotations: *
+                    ]]></bnd>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

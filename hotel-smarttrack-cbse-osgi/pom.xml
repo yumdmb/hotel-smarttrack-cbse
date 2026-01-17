@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.hotel.smarttrack.osgi</groupId>
+    <artifactId>hotel-smarttrack-cbse-osgi</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>Hotel SmartTrack CBSE - OSGi Version</name>
+    <description>Component-Based Hotel Management System using OSGi</description>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        
+        <!-- OSGi Versions -->
+        <osgi.core.version>8.0.0</osgi.core.version>
+        <osgi.cmpn.version>7.0.0</osgi.cmpn.version>
+        <felix.framework.version>7.0.5</felix.framework.version>
+        <bnd.version>7.1.0</bnd.version>
+    </properties>
+
+    <!-- Sub-modules to be added as you create them -->
+    <modules>
+        <module>common-bundle</module>
+        <module>guest-management-bundle</module>
+        <module>room-management-bundle</module>
+        <module>reservation-management-bundle</module>
+        <module>stay-management-bundle</module>
+        <module>billing-payment-bundle</module>
+    </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- OSGi Core API -->
+            <dependency>
+                <groupId>org.osgi</groupId>
+                <artifactId>osgi.core</artifactId>
+                <version>${osgi.core.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            
+            <!-- OSGi Compendium (DS, Config Admin, etc.) -->
+            <dependency>
+                <groupId>org.osgi</groupId>
+                <artifactId>osgi.cmpn</artifactId>
+                <version>${osgi.cmpn.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            
+            <!-- OSGi Annotations for Declarative Services -->
+            <dependency>
+                <groupId>org.osgi</groupId>
+                <artifactId>org.osgi.service.component.annotations</artifactId>
+                <version>1.5.1</version>
+                <scope>provided</scope>
+            </dependency>
+            
+            <!-- Apache Felix Framework (for testing/running) -->
+            <dependency>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>org.apache.felix.framework</artifactId>
+                <version>${felix.framework.version}</version>
+                <scope>provided</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <!-- Bnd Maven Plugin for generating OSGi bundles -->
+                <plugin>
+                    <groupId>biz.aQute.bnd</groupId>
+                    <artifactId>bnd-maven-plugin</artifactId>
+                    <version>${bnd.version}</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>bnd-process</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                
+                <!-- Maven JAR Plugin configured for OSGi bundles -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>3.3.0</version>
+                    <configuration>
+                        <archive>
+                            <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+                        </archive>
+                    </configuration>
+                </plugin>
+                
+                <!-- Maven Compiler Plugin -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.11.0</version>
+                    <configuration>
+                        <source>${maven.compiler.source}</source>
+                        <target>${maven.compiler.target}</target>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+</project>
