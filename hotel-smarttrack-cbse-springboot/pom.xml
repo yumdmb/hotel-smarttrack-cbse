@@ -25,6 +25,7 @@
         <module>reservation-management</module>
         <module>stay-management</module>
         <module>billing-payment</module>
+        <module>application</module>
     </modules>
 
     <properties>
@@ -42,65 +43,6 @@
         </dependencies>
     </dependencyManagement>
 
-    <!-- Dependencies for the main application -->
-    <dependencies>
-        <!-- All component modules -->
-        <dependency>
-            <groupId>com.hotel.smarttrack</groupId>
-            <artifactId>common</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.hotel.smarttrack</groupId>
-            <artifactId>room-management</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.hotel.smarttrack</groupId>
-            <artifactId>guest-management</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.hotel.smarttrack</groupId>
-            <artifactId>reservation-management</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.hotel.smarttrack</groupId>
-            <artifactId>stay-management</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.hotel.smarttrack</groupId>
-            <artifactId>billing-payment</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        
-        <!-- Spring Boot Starters -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-jpa</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-        
-        <!-- H2 In-Memory Database for demo -->
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        
-        <!-- Testing -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
-
     <build>
         <pluginManagement>
             <plugins>
@@ -113,18 +55,6 @@
                 </plugin>
             </plugins>
         </pluginManagement>
-        
-        <!-- Enable spring-boot:run for the parent module -->
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <skip>false</skip>
-                    <mainClass>com.hotel.smarttrack.HotelSmarttrackCbseSpringbootApplication</mainClass>
-                </configuration>
-            </plugin>
-        </plugins>
     </build>
 
 </project>
