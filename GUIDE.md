@@ -91,6 +91,104 @@ Access H2 Console: http://localhost:8080/h2-console
 
 ---
 
+## Terminal Console UI
+
+The application uses a **terminal-based menu system**. Each module has its own console, called from a central `MainMenuConsole`.
+
+### Architecture
+
+```
+application/
+  └── MainMenuConsole.java      ← Main hub, runs on startup
+
+your-module/
+  └── YourModuleConsole.java    ← Your menu, called from MainMenu
+  └── YourManager.java          ← Business logic
+```
+
+### How to Create Your Console
+
+**Step 1:** Create console class in your module:
+
+```java
+// your-module/src/main/java/com/hotel/smarttrack/yourmodule/YourModuleConsole.java
+
+package com.hotel.smarttrack.yourmodule;
+
+import org.springframework.stereotype.Component;
+import java.util.Scanner;
+
+@Component
+public class YourModuleConsole {
+
+    private final YourService yourService;
+    private Scanner scanner;
+
+    public YourModuleConsole(YourService yourService) {
+        this.yourService = yourService;
+    }
+
+    // This method is called by MainMenuConsole
+    public void showMenu(Scanner scanner) {
+        this.scanner = scanner;
+
+        boolean running = true;
+        while (running) {
+            System.out.println("\n=== YOUR MODULE MENU ===");
+            System.out.println("1. Option 1");
+            System.out.println("2. Option 2");
+            System.out.println("0. Back to Main Menu");
+
+            System.out.print("Choice: ");
+            String choice = scanner.nextLine().trim();
+
+            switch (choice) {
+                case "1" -> doOption1();
+                case "2" -> doOption2();
+                case "0" -> running = false;  // Returns to main menu
+                default -> System.out.println("Invalid choice");
+            }
+        }
+    }
+
+    private void doOption1() { /* your code */ }
+    private void doOption2() { /* your code */ }
+}
+```
+
+**Step 2:** Tell the team lead to wire it in `MainMenuConsole`:
+
+```java
+// application/.../MainMenuConsole.java
+
+// Add to constructor:
+private final YourModuleConsole yourModuleConsole;
+
+// Add to switch case:
+case "X" -> yourModuleConsole.showMenu(scanner);
+```
+
+### Key Points
+
+| ✅ Do                                         | ❌ Don't                              |
+| --------------------------------------------- | ------------------------------------- |
+| Use `showMenu(Scanner scanner)` method        | Don't implement `CommandLineRunner`   |
+| Keep console in YOUR module                   | Don't put console in `application`    |
+| Option "0" should exit with `running = false` | Don't call `System.exit()`            |
+| Pass the scanner from MainMenu                | Don't create new `Scanner(System.in)` |
+
+### Currently Implemented
+
+| Module                 | Console                 | Status      |
+| ---------------------- | ----------------------- | ----------- |
+| Stay Management        | `StayManagementConsole` | ✅ Ready    |
+| Room Management        | -                       | Not started |
+| Guest Management       | -                       | Not started |
+| Reservation Management | -                       | Not started |
+| Billing & Payment      | -                       | Not started |
+
+---
+
 ## OSGi
 
 _Coming soon..._
