@@ -1,5 +1,6 @@
 package com.hotel.smarttrack;
 
+import com.hotel.smarttrack.room.RoomManagementConsole;
 import com.hotel.smarttrack.stay.StayManagementConsole;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
@@ -23,18 +24,20 @@ import java.util.Scanner;
 @Order(100) // Run after all initialization
 public class MainMenuConsole implements CommandLineRunner {
 
+    private final RoomManagementConsole roomManagementConsole;
     private final StayManagementConsole stayManagementConsole;
     // Add other consoles here as they are created:
     // private final GuestManagementConsole guestManagementConsole;
-    // private final RoomManagementConsole roomManagementConsole;
     // private final ReservationManagementConsole reservationManagementConsole;
     // private final BillingManagementConsole billingManagementConsole;
 
     private final Scanner scanner;
 
-    public MainMenuConsole(StayManagementConsole stayManagementConsole
+    public MainMenuConsole(RoomManagementConsole roomManagementConsole,
+                           StayManagementConsole stayManagementConsole
     // Add other consoles to constructor as they are created
     ) {
+        this.roomManagementConsole = roomManagementConsole;
         this.stayManagementConsole = stayManagementConsole;
         this.scanner = new Scanner(System.in);
     }
@@ -58,7 +61,7 @@ public class MainMenuConsole implements CommandLineRunner {
 
             switch (choice) {
                 case "1" -> accessGuestManagement();
-                case "2" -> accessRoomManagement();
+                case "2" -> roomManagementConsole.showMenu(scanner);
                 case "3" -> accessReservationManagement();
                 case "4" -> stayManagementConsole.showMenu(scanner);
                 case "5" -> accessBillingManagement();
@@ -80,7 +83,7 @@ public class MainMenuConsole implements CommandLineRunner {
         System.out.println("╠══════════════════════════════════════════════════════════════╣");
         System.out.println("║                                                              ║");
         System.out.println("║   1. Guest Management          (Ma Wenting)                  ║");
-        System.out.println("║   2. Room Management           (Eisraq Rejab)                ║");
+        System.out.println("║   2. Room Management           (Eisraq Rejab)      ✓ Ready   ║");
         System.out.println("║   3. Reservation Management    (Li Yuhang)                   ║");
         System.out.println("║   4. Stay Management           (Elvis Sawing)      ✓ Ready   ║");
         System.out.println("║   5. Billing & Payment         (Huang Di)                    ║");

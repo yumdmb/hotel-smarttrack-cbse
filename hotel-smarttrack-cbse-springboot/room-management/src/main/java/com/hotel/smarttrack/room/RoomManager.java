@@ -1,20 +1,26 @@
 package com.hotel.smarttrack.room;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.hotel.smarttrack.entity.Room;
 import com.hotel.smarttrack.entity.RoomType;
 import com.hotel.smarttrack.repository.RoomRepository;
 import com.hotel.smarttrack.repository.RoomTypeRepository;
 import com.hotel.smarttrack.service.RoomService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.annotation.PostConstruct;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * RoomManager - Implementation of RoomService.
@@ -24,7 +30,7 @@ import java.util.stream.Collectors;
  * Enhanced Features:
  * - Input validation at service layer
  * - Date range validation
- * - Status value validation using RoomStatus enum
+ * - Status value validation
  * - Enhanced availability checking with reservation integration
  * - JPA-based persistence
  */
@@ -32,19 +38,30 @@ import java.util.stream.Collectors;
 @Transactional
 public class RoomManager implements RoomService {
 
+    // ============ Room Status Constants ============
+    
+    public static final String STATUS_AVAILABLE = "Available";
+    public static final String STATUS_OCCUPIED = "Occupied";
+    public static final String STATUS_UNDER_CLEANING = "Under Cleaning";
+    public static final String STATUS_OUT_OF_SERVICE = "Out of Service";
+    
+    private static final List<String> VALID_STATUSES = Arrays.asList(
+        STATUS_AVAILABLE, STATUS_OCCUPIED, STATUS_UNDER_CLEANING, STATUS_OUT_OF_SERVICE
+    );
+
     private final RoomRepository roomRepository;
     private final RoomTypeRepository roomTypeRepository;
 
-    // Helper component for availability checking with reservation integration
-    private final RoomAvailabilityChecker availabilityChecker;
+    // Mock reservation data for availability checking
+    // In production, this would query the Reservation service
+    // Map: roomId -> List of [checkIn, checkOut] date pairs
+    private final Map<Long, List<LocalDate[]>> roomReservations = new HashMap<>();
 
     @Autowired
     public RoomManager(RoomRepository roomRepository,
-            RoomTypeRepository roomTypeRepository,
-            RoomAvailabilityChecker availabilityChecker) {
+            RoomTypeRepository roomTypeRepository) {
         this.roomRepository = roomRepository;
         this.roomTypeRepository = roomTypeRepository;
-        this.availabilityChecker = availabilityChecker;
     }
 
     /**
@@ -159,7 +176,7 @@ public class RoomManager implements RoomService {
         room.setRoomNumber(roomNumber.trim());
         room.setFloorNumber(floorNumber);
         room.setRoomType(roomType);
-        room.setStatus(RoomStatus.AVAILABLE.getDisplayName());
+        room.setStatus(STATUS_AVAILABLE);
 
         Room saved = roomRepository.save(room);
         System.out.println("[RoomManager] Created room: " + roomNumber +
@@ -227,7 +244,7 @@ public class RoomManager implements RoomService {
                 .orElseThrow(() -> new IllegalArgumentException("Room with ID " + roomId + " not found"));
 
         // Business rule: Can't delete occupied rooms
-        if (RoomStatus.OCCUPIED.getDisplayName().equals(room.getStatus())) {
+        if (STATUS_OCCUPIED.equals(room.getStatus())) {
             throw new IllegalStateException("Cannot delete room " + room.getRoomNumber() +
                     " - room is currently occupied");
         }
@@ -245,27 +262,62 @@ public class RoomManager implements RoomService {
         if (roomId == null) {
             throw new IllegalArgumentException("Room ID cannot be null");
         }
+        if (status == null || status.trim().isEmpty()) {
+            throw new IllegalArgumentException("Room status cannot be null or empty");
+        }
 
-        // Validate status using RoomStatus enum
-        RoomStatus newStatus;
-        try {
-            newStatus = RoomStatus.fromDisplayName(status);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid room status. " + e.getMessage());
+        // Validate status
+        if (!VALID_STATUSES.contains(status)) {
+            throw new IllegalArgumentException("Invalid room status: " + status + 
+                ". Valid statuses are: " + String.join(", ", VALID_STATUSES));
         }
 
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("Room with ID " + roomId + " not found"));
 
         String oldStatus = room.getStatus();
-        room.setStatus(newStatus.getDisplayName());
+        room.setStatus(status);
         roomRepository.save(room);
 
         System.out.println("[RoomManager] Updated room " + room.getRoomNumber() +
-                " status from '" + oldStatus + "' to '" + newStatus.getDisplayName() + "'");
+                " status from '" + oldStatus + "' to '" + status + "'");
     }
 
     // ============ Room Availability Operations ============
+    
+    /**
+     * Check if a room is available for a specific date range.
+     */
+    private boolean isRoomAvailable(Room room, LocalDate checkIn, LocalDate checkOut) {
+        // First check the room status - only Available rooms can be booked
+        if (!STATUS_AVAILABLE.equals(room.getStatus())) {
+            return false;
+        }
+
+        // Check against existing reservations
+        List<LocalDate[]> reservations = roomReservations.getOrDefault(room.getRoomId(), new ArrayList<>());
+
+        for (LocalDate[] reserved : reservations) {
+            LocalDate reservedStart = reserved[0];
+            LocalDate reservedEnd = reserved[1];
+            
+            // Check if date ranges overlap
+            if (!checkOut.isBefore(reservedStart) && !reservedEnd.isBefore(checkIn)) {
+                return false; // Conflict found
+            }
+        }
+
+        return true;
+    }
+    
+    /**
+     * Block a room for a specific date range (simulating a reservation).
+     * In production, this would be handled by the Reservation service.
+     */
+    public void blockRoomDates(Long roomId, LocalDate checkIn, LocalDate checkOut) {
+        roomReservations.computeIfAbsent(roomId, k -> new ArrayList<>())
+                .add(new LocalDate[]{checkIn, checkOut});
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -275,7 +327,7 @@ public class RoomManager implements RoomService {
 
         // Filter rooms using enhanced availability checking
         return roomRepository.findAllAvailable().stream()
-                .filter(room -> availabilityChecker.isRoomAvailable(room, checkIn, checkOut))
+                .filter(room -> isRoomAvailable(room, checkIn, checkOut))
                 .collect(Collectors.toList());
     }
 
@@ -290,24 +342,16 @@ public class RoomManager implements RoomService {
         // Date range validation
         validateDateRange(checkIn, checkOut);
 
-        // Validate room type exists
-        if (!roomTypeRepository.existsById(roomTypeId)) {
-            throw new IllegalArgumentException("Room type with ID " + roomTypeId + " not found");
-        }
-
-        return roomRepository.findAvailableByRoomTypeId(roomTypeId).stream()
-                .filter(room -> availabilityChecker.isRoomAvailable(room, checkIn, checkOut))
+        // Filter by room type and availability
+        return roomRepository.findByRoomTypeId(roomTypeId).stream()
+                .filter(room -> isRoomAvailable(room, checkIn, checkOut))
                 .collect(Collectors.toList());
     }
 
     // ============ Helper Methods ============
 
     /**
-     * Validate date range for room availability checks.
-     * 
-     * @param checkIn  Check-in date
-     * @param checkOut Check-out date
-     * @throws IllegalArgumentException if dates are invalid
+     * Validates date range for room availability checks.
      */
     private void validateDateRange(LocalDate checkIn, LocalDate checkOut) {
         if (checkIn == null) {
@@ -329,25 +373,14 @@ public class RoomManager implements RoomService {
     }
 
     /**
-     * Get the availability checker for external access if needed.
-     * This allows other components (like Reservation) to block/unblock dates.
-     * 
-     * @return The room availability checker
-     */
-    public RoomAvailabilityChecker getAvailabilityChecker() {
-        return availabilityChecker;
-    }
-
-    /**
      * Get rooms by status (additional helper method).
-     * 
-     * @param status The room status to filter by
-     * @return List of rooms with the specified status
      */
     @Transactional(readOnly = true)
     public List<Room> getRoomsByStatus(String status) {
         // Validate status
-        RoomStatus.fromDisplayName(status); // This will throw if invalid
+        if (!VALID_STATUSES.contains(status)) {
+            throw new IllegalArgumentException("Invalid room status: " + status);
+        }
 
         return roomRepository.findByStatus(status);
     }
