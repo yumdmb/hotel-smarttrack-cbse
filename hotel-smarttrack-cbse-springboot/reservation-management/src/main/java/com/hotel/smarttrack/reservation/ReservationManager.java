@@ -151,9 +151,22 @@ public class ReservationManager implements ReservationService {
     @Override
     public List<Long> searchAvailableRooms(LocalDate checkIn, LocalDate checkOut,
             Long roomTypeId, int occupancy) {
-        // TODO: Implement availability search after merging with room-management
-        throw new UnsupportedOperationException(
-                "searchAvailableRooms not yet implemented - needs room-management integration");
+        // Get available rooms from the repository using the overlapping query
+        List<Reservation> overlapping = reservationRepository.findOverlapping(roomTypeId, checkIn, checkOut);
+
+        // Get all rooms of the requested type
+        List<Room> allRoomsOfType = roomRepository.findAll().stream()
+                .filter(r -> r.getRoomType() != null && r.getRoomType().getRoomTypeId().equals(roomTypeId))
+                .filter(r -> "Available".equalsIgnoreCase(r.getStatus()) || r.getStatus() == null)
+                .toList();
+
+        // Filter out rooms that have overlapping reservations
+        return allRoomsOfType.stream()
+                .filter(room -> overlapping.stream()
+                        .noneMatch(res -> res.getAssignedRoom() != null
+                                && res.getAssignedRoom().getRoomId().equals(room.getRoomId())))
+                .map(Room::getRoomId)
+                .toList();
     }
 
     @Override
