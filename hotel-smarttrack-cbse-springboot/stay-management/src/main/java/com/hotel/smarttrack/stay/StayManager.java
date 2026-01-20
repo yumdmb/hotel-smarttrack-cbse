@@ -1,8 +1,14 @@
 package com.hotel.smarttrack.stay;
 
 import com.hotel.smarttrack.entity.*;
-import com.hotel.smarttrack.repository.*;
+import com.hotel.smarttrack.repository.IncidentalChargeRepository;
+import com.hotel.smarttrack.repository.StayRepository;
+import com.hotel.smarttrack.service.GuestService;
+import com.hotel.smarttrack.service.ReservationService;
+import com.hotel.smarttrack.service.RoomService;
 import com.hotel.smarttrack.service.StayService;
+// TODO: Uncomment when Billing module is ready
+// import com.hotel.smarttrack.service.BillingService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +28,12 @@ import java.util.Optional;
  * - UC15: Record Incidental Charges
  * - UC16: Check-Out Guest
  * 
+ * Cross-module dependencies (via service interfaces):
+ * - RoomService: Update room status during check-in/out
+ * - ReservationService: Verify and update reservation status
+ * - GuestService: Validate walk-in guests
+ * - BillingService: Generate invoice at checkout (TODO: future integration)
+ * 
  * @author Elvis Sawing
  */
 @Service
@@ -36,22 +48,32 @@ public class StayManager implements StayService {
     private static final String ROOM_AVAILABLE = "Available";
     private static final String ROOM_CLEANING = "Under Cleaning";
 
+    // Own repositories
     private final StayRepository stayRepository;
     private final IncidentalChargeRepository chargeRepository;
-    private final RoomRepository roomRepository;
-    private final ReservationRepository reservationRepository;
-    private final GuestRepository guestRepository;
+
+    // Cross-module service dependencies
+    private final RoomService roomService;
+    private final ReservationService reservationService;
+    private final GuestService guestService;
+
+    // TODO: Uncomment when Billing module is ready (for UC16 invoice generation)
+    // private final BillingService billingService;
 
     public StayManager(StayRepository stayRepository,
             IncidentalChargeRepository chargeRepository,
-            RoomRepository roomRepository,
-            ReservationRepository reservationRepository,
-            GuestRepository guestRepository) {
+            RoomService roomService,
+            ReservationService reservationService,
+            GuestService guestService
+    // TODO: Uncomment when Billing module is ready
+    // , BillingService billingService
+    ) {
         this.stayRepository = stayRepository;
         this.chargeRepository = chargeRepository;
-        this.roomRepository = roomRepository;
-        this.reservationRepository = reservationRepository;
-        this.guestRepository = guestRepository;
+        this.roomService = roomService;
+        this.reservationService = reservationService;
+        this.guestService = guestService;
+        // this.billingService = billingService;
     }
 
     // ============ UC13: Check-In Operations ============
@@ -59,7 +81,8 @@ public class StayManager implements StayService {
     @Override
     @Transactional
     public Stay checkInGuest(Long reservationId) {
-        Reservation reservation = reservationRepository.findById(reservationId)
+        // Get reservation via service
+        Reservation reservation = reservationService.getReservationById(reservationId)
                 .orElseThrow(() -> new IllegalArgumentException("Reservation not found: " + reservationId));
 
         // Validate reservation status
@@ -82,13 +105,15 @@ public class StayManager implements StayService {
         stay.setCheckInTime(LocalDateTime.now());
         stay.setStatus(STATUS_CHECKED_IN);
 
-        // Update room status to Occupied
-        room.setStatus(ROOM_OCCUPIED);
-        roomRepository.save(room);
+        // Update room status via RoomService
+        roomService.updateRoomStatus(room.getRoomId(), ROOM_OCCUPIED);
 
-        // Update reservation status to Checked-In
+        // Update reservation status - note: ideally ReservationService should have
+        // updateStatus method
+        // For now, we'll update directly but this should be changed when
+        // ReservationService is implemented
         reservation.setStatus("Checked-In");
-        reservationRepository.save(reservation);
+        reservationService.confirmReservation(reservationId); // Using existing method as proxy
 
         Stay saved = stayRepository.save(stay);
         System.out.println("[StayManager] Checked in guest " + reservation.getGuest().getName()
@@ -99,10 +124,12 @@ public class StayManager implements StayService {
     @Override
     @Transactional
     public Stay checkInWalkIn(Long guestId, Long roomId) {
-        Guest guest = guestRepository.findById(guestId)
+        // Get guest via GuestService
+        Guest guest = guestService.getGuestById(guestId)
                 .orElseThrow(() -> new IllegalArgumentException("Guest not found: " + guestId));
 
-        Room room = roomRepository.findById(roomId)
+        // Get room via RoomService
+        Room room = roomService.getRoomById(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("Room not found: " + roomId));
 
         // Validate room is available
@@ -117,9 +144,8 @@ public class StayManager implements StayService {
         stay.setCheckInTime(LocalDateTime.now());
         stay.setStatus(STATUS_CHECKED_IN);
 
-        // Update room status to Occupied
-        room.setStatus(ROOM_OCCUPIED);
-        roomRepository.save(room);
+        // Update room status via RoomService
+        roomService.updateRoomStatus(roomId, ROOM_OCCUPIED);
 
         Stay saved = stayRepository.save(stay);
         System.out.println("[StayManager] Walk-in check-in: " + guest.getName()
@@ -135,23 +161,24 @@ public class StayManager implements StayService {
         Stay stay = stayRepository.findById(stayId)
                 .orElseThrow(() -> new IllegalArgumentException("Stay not found: " + stayId));
 
-        Room newRoom = roomRepository.findById(roomId)
+        // Get new room via RoomService
+        Room newRoom = roomService.getRoomById(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("Room not found: " + roomId));
 
         // Release old room if different
         Room oldRoom = stay.getRoom();
         if (oldRoom != null && !oldRoom.getRoomId().equals(roomId)) {
-            oldRoom.setStatus(ROOM_AVAILABLE);
-            roomRepository.save(oldRoom);
+            // Update old room status via RoomService
+            roomService.updateRoomStatus(oldRoom.getRoomId(), ROOM_AVAILABLE);
             System.out.println("[StayManager] Released room " + oldRoom.getRoomNumber());
         }
 
         // Assign new room
         stay.setRoom(newRoom);
         stay.setKeyCardNumber(keyCardNumber);
-        newRoom.setStatus(ROOM_OCCUPIED);
 
-        roomRepository.save(newRoom);
+        // Update new room status via RoomService
+        roomService.updateRoomStatus(roomId, ROOM_OCCUPIED);
         stayRepository.save(stay);
 
         System.out.println("[StayManager] Assigned room " + newRoom.getRoomNumber()
@@ -208,21 +235,29 @@ public class StayManager implements StayService {
         stay.setCheckOutTime(LocalDateTime.now());
         stay.setStatus(STATUS_CHECKED_OUT);
 
-        // Update room to cleaning status
+        // Update room to cleaning status via RoomService
         Room room = stay.getRoom();
         if (room != null) {
-            room.setStatus(ROOM_CLEANING);
-            roomRepository.save(room);
+            roomService.updateRoomStatus(room.getRoomId(), ROOM_CLEANING);
         }
 
         // Update reservation if linked
+        // Note: ReservationService should have a method to update status
+        // This is a workaround - proper implementation would be
+        // reservationService.updateStatus()
         Reservation reservation = stay.getReservation();
         if (reservation != null) {
+            // TODO: Use reservationService.updateReservationStatus() when available
             reservation.setStatus("Checked-Out");
-            reservationRepository.save(reservation);
         }
 
         stayRepository.save(stay);
+
+        // TODO: Generate invoice via BillingService when module is ready (UC16)
+        // BigDecimal roomCharges = calculateRoomCharges(stay);
+        // List<IncidentalCharge> charges = chargeRepository.findByStayId(stayId);
+        // billingService.generateInvoice(stay, roomCharges, charges);
+
         System.out.println("[StayManager] Checked out from room "
                 + (room != null ? room.getRoomNumber() : "N/A"));
     }
