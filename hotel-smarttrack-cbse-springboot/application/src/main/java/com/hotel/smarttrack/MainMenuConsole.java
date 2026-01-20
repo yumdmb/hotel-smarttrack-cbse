@@ -1,6 +1,7 @@
 package com.hotel.smarttrack;
 
 import com.hotel.smarttrack.billing.console.BillingConsole;
+import com.hotel.smarttrack.reservation.console.ReservationConsole;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -12,10 +13,12 @@ import java.util.Scanner;
 public class MainMenuConsole implements CommandLineRunner {
 
     private final BillingConsole billingConsole;
+    private final ReservationConsole reservationConsole;
     private final Scanner scanner;
 
-    public MainMenuConsole(BillingConsole billingConsole) {
+    public MainMenuConsole(BillingConsole billingConsole, ReservationConsole reservationConsole) {
         this.billingConsole = billingConsole;
+        this.reservationConsole = reservationConsole;
         this.scanner = new Scanner(System.in);
     }
 
@@ -36,9 +39,9 @@ public class MainMenuConsole implements CommandLineRunner {
             switch (choice) {
                 case "1" -> placeholder("Guest Management (Ma Wenting)");
                 case "2" -> placeholder("Room Management (Eisraq Rejab)");
-                case "3" -> placeholder("Reservation Management (Li Yuhang)");
+                case "3" -> reservationConsole.showMenu(scanner);  // ✅ 接入 Reservation
                 case "4" -> placeholder("Stay Management (Elvis Sawing)");
-                case "5" -> billingConsole.showMenu(scanner); // ✅ 你的模块
+                case "5" -> billingConsole.showMenu(scanner);      // ✅ Billing
                 case "0" -> running = false;
                 default -> System.out.println("Invalid choice.");
             }
@@ -51,9 +54,9 @@ public class MainMenuConsole implements CommandLineRunner {
         System.out.println("╠══════════════════════════════════════════════════════════════╣");
         System.out.println("║   1. Guest Management        (Ma Wenting)                    ║");
         System.out.println("║   2. Room Management         (Eisraq Rejab)                  ║");
-        System.out.println("║   3. Reservation Management  (Li Yuhang)                     ║");
+        System.out.println("║   3. Reservation Management  (Li Yuhang)   ✓ Ready           ║");
         System.out.println("║   4. Stay Management         (Elvis Sawing)                  ║");
-        System.out.println("║   5. Billing & Payment       (Huang Di)   ✓ Ready           ║");
+        System.out.println("║   5. Billing & Payment       (Huang Di)     ✓ Ready          ║");
         System.out.println("║   0. Exit System                                             ║");
         System.out.println("╚══════════════════════════════════════════════════════════════╝");
     }
