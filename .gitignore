@@ -68,3 +68,5 @@ application-local.yml
 .lombok/
 
 local-docs/
+
+.env
