@@ -31,3 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### H2 Database Files ###
+# Don't commit H2 binary files - use schema.sql and data.sql instead
+*.mv.db
+*.trace.db
+/data/
