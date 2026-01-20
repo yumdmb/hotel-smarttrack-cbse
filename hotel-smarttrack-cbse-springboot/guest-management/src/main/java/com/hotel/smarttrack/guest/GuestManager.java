@@ -11,11 +11,11 @@ import java.util.Optional;
 
 @Service
 @Transactional
-public class GuestManagerImpl implements GuestService {
+public class GuestManager implements GuestService {
 
     private final GuestRepository guestRepository;
 
-    public GuestManagerImpl(GuestRepository guestRepository) {
+    public GuestManager(GuestRepository guestRepository) {
         this.guestRepository = guestRepository;
     }
 
@@ -44,7 +44,6 @@ public class GuestManagerImpl implements GuestService {
         g.setPhone(phone.trim());
         g.setIdentificationNumber(normalizedId);
 
-
         g.setStatus("ACTIVE");
         g.setStatusJustification(null);
 
@@ -56,7 +55,6 @@ public class GuestManagerImpl implements GuestService {
         if (guest == null || guest.getGuestId() == null) {
             throw new IllegalArgumentException("Guest ID is required for update.");
         }
-
 
         Guest existing = guestRepository.findById(guest.getGuestId())
                 .orElseThrow(() -> new IllegalArgumentException("Guest Not Found"));
@@ -98,7 +96,6 @@ public class GuestManagerImpl implements GuestService {
             existing.setIdentificationNumber(newId);
         }
 
-
         if (notBlank(existing.getStatus())) {
             existing.setStatus(existing.getStatus().trim().toUpperCase());
         } else {
@@ -117,7 +114,8 @@ public class GuestManagerImpl implements GuestService {
     @Override
     @Transactional(readOnly = true)
     public List<Guest> searchGuests(String searchTerm) {
-        if (!notBlank(searchTerm)) return List.of();
+        if (!notBlank(searchTerm))
+            return List.of();
         return guestRepository.searchGuests(searchTerm.trim());
     }
 
@@ -149,8 +147,10 @@ public class GuestManagerImpl implements GuestService {
     // ---- helpers ----
 
     private void setStatus(Long guestId, String status, String justification, String err) {
-        if (guestId == null) throw new IllegalArgumentException("Guest ID is required.");
-        if (!notBlank(justification)) throw new IllegalArgumentException(err);
+        if (guestId == null)
+            throw new IllegalArgumentException("Guest ID is required.");
+        if (!notBlank(justification))
+            throw new IllegalArgumentException(err);
 
         Guest g = guestRepository.findById(guestId)
                 .orElseThrow(() -> new IllegalArgumentException("Guest Not Found"));
@@ -161,7 +161,8 @@ public class GuestManagerImpl implements GuestService {
     }
 
     private static void validateEmail(String email) {
-        if (!notBlank(email)) throw new IllegalArgumentException("Email is required.");
+        if (!notBlank(email))
+            throw new IllegalArgumentException("Email is required.");
         String e = email.trim();
         int at = e.indexOf('@');
         if (at <= 0 || at == e.length() - 1) {
@@ -174,7 +175,8 @@ public class GuestManagerImpl implements GuestService {
     }
 
     private static void require(String v, String field) {
-        if (!notBlank(v)) throw new IllegalArgumentException(field + " is required.");
+        if (!notBlank(v))
+            throw new IllegalArgumentException(field + " is required.");
     }
 
     private static boolean notBlank(String s) {
