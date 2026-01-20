@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="(H2)HotelSmarttrackApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <module name="application" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="com.hotel.smarttrack.HotelSmarttrackApplication" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
