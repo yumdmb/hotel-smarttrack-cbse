@@ -6,10 +6,12 @@ import com.hotel.smarttrack.entity.Stay;
 import com.hotel.smarttrack.entity.IncidentalCharge;
 import com.hotel.smarttrack.repository.InvoiceRepository;
 import com.hotel.smarttrack.repository.PaymentRepository;
-import com.hotel.smarttrack.repository.StayRepository;
 import com.hotel.smarttrack.repository.IncidentalChargeRepository;
 import com.hotel.smarttrack.service.BillingService;
+import com.hotel.smarttrack.service.StayService;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -26,22 +28,23 @@ import java.util.UUID;
  * Part of Billing & Payment Component (Rule 2).
  */
 @Service
+@Transactional
 public class BillingManager implements BillingService {
 
     private static final BigDecimal TAX_RATE = new BigDecimal("0.10"); // 10% tax
 
     private final InvoiceRepository invoiceRepository;
     private final PaymentRepository paymentRepository;
-    private final StayRepository stayRepository;
+    private final StayService stayService;
     private final IncidentalChargeRepository incidentalChargeRepository;
 
     public BillingManager(InvoiceRepository invoiceRepository,
             PaymentRepository paymentRepository,
-            StayRepository stayRepository,
+            @Lazy StayService stayService,
             IncidentalChargeRepository incidentalChargeRepository) {
         this.invoiceRepository = invoiceRepository;
         this.paymentRepository = paymentRepository;
-        this.stayRepository = stayRepository;
+        this.stayService = stayService;
         this.incidentalChargeRepository = incidentalChargeRepository;
     }
 
@@ -55,7 +58,7 @@ public class BillingManager implements BillingService {
             return existingInvoice.get();
         }
 
-        Stay stay = stayRepository.findById(stayId)
+        Stay stay = stayService.getStayById(stayId)
                 .orElseThrow(() -> new RuntimeException("Stay not found: " + stayId));
 
         // Calculate charges
@@ -84,7 +87,7 @@ public class BillingManager implements BillingService {
 
     @Override
     public BigDecimal computeTotalCharges(Long stayId) {
-        Stay stay = stayRepository.findById(stayId)
+        Stay stay = stayService.getStayById(stayId)
                 .orElseThrow(() -> new RuntimeException("Stay not found: " + stayId));
 
         BigDecimal roomCharges = calculateRoomCharges(stay);
