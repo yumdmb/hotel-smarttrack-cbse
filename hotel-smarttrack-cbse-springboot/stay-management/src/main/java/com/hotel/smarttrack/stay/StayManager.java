@@ -7,8 +7,7 @@ import com.hotel.smarttrack.service.GuestService;
 import com.hotel.smarttrack.service.ReservationService;
 import com.hotel.smarttrack.service.RoomService;
 import com.hotel.smarttrack.service.StayService;
-// TODO: Uncomment when Billing module is ready
-// import com.hotel.smarttrack.service.BillingService;
+import com.hotel.smarttrack.service.BillingService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,24 +55,20 @@ public class StayManager implements StayService {
     private final RoomService roomService;
     private final ReservationService reservationService;
     private final GuestService guestService;
-
-    // TODO: Uncomment when Billing module is ready (for UC16 invoice generation)
-    // private final BillingService billingService;
+    private final BillingService billingService;
 
     public StayManager(StayRepository stayRepository,
             IncidentalChargeRepository chargeRepository,
             RoomService roomService,
             ReservationService reservationService,
-            GuestService guestService
-    // TODO: Uncomment when Billing module is ready
-    // , BillingService billingService
-    ) {
+            GuestService guestService,
+            BillingService billingService) {
         this.stayRepository = stayRepository;
         this.chargeRepository = chargeRepository;
         this.roomService = roomService;
         this.reservationService = reservationService;
         this.guestService = guestService;
-        // this.billingService = billingService;
+        this.billingService = billingService;
     }
 
     // ============ UC13: Check-In Operations ============
@@ -253,10 +248,8 @@ public class StayManager implements StayService {
 
         stayRepository.save(stay);
 
-        // TODO: Generate invoice via BillingService when module is ready (UC16)
-        // BigDecimal roomCharges = calculateRoomCharges(stay);
-        // List<IncidentalCharge> charges = chargeRepository.findByStayId(stayId);
-        // billingService.generateInvoice(stay, roomCharges, charges);
+        // Generate invoice via BillingService (UC16)
+        billingService.generateInvoice(stayId);
 
         System.out.println("[StayManager] Checked out from room "
                 + (room != null ? room.getRoomNumber() : "N/A"));
