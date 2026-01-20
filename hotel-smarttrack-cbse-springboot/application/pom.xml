@@ -72,10 +72,10 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!-- H2 -->
+        <!-- PostgreSQL (Neon) - Default Database -->
         <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
 
@@ -94,6 +94,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <mainClass>com.hotel.smarttrack.HotelSmarttrackApplication</mainClass>
+                    <skip>false</skip>
                 </configuration>
             </plugin>
         </plugins>

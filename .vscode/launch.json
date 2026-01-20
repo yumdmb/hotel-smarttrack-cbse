@@ -1,0 +1,13 @@
+{
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Run Application (Neon)",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "mainClass": "com.hotel.smarttrack.HotelSmarttrackApplication",
+      "projectName": "application",
+      "envFile": "${workspaceFolder}/hotel-smarttrack-cbse-springboot/.env"
+    }
+  ]
+}

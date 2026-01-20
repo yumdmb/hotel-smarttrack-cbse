@@ -50,7 +50,10 @@ nbdist/
 .nb-gradle/
 
 # IDE - VS Code
-.vscode/
+
+
+# Environment variables (sensitive credentials)
+.env
 
 # OS Files
 .DS_Store
