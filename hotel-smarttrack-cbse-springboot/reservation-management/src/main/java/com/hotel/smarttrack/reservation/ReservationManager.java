@@ -5,10 +5,9 @@ import com.hotel.smarttrack.entity.Guest;
 import com.hotel.smarttrack.entity.RoomType;
 import com.hotel.smarttrack.entity.Room;
 import com.hotel.smarttrack.repository.ReservationRepository;
-import com.hotel.smarttrack.repository.GuestRepository;
-import com.hotel.smarttrack.repository.RoomRepository;
-import com.hotel.smarttrack.repository.RoomTypeRepository;
 import com.hotel.smarttrack.service.ReservationService;
+import com.hotel.smarttrack.service.GuestService;
+import com.hotel.smarttrack.service.RoomService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,18 +23,15 @@ import java.util.Optional;
 public class ReservationManager implements ReservationService {
 
     private final ReservationRepository reservationRepository;
-    private final GuestRepository guestRepository;
-    private final RoomTypeRepository roomTypeRepository;
-    private final RoomRepository roomRepository;
+    private final GuestService guestService;
+    private final RoomService roomService;
 
     public ReservationManager(ReservationRepository reservationRepository,
-            GuestRepository guestRepository,
-            RoomTypeRepository roomTypeRepository,
-            RoomRepository roomRepository) {
+            GuestService guestService,
+            RoomService roomService) {
         this.reservationRepository = reservationRepository;
-        this.guestRepository = guestRepository;
-        this.roomTypeRepository = roomTypeRepository;
-        this.roomRepository = roomRepository;
+        this.guestService = guestService;
+        this.roomService = roomService;
     }
 
     @Override
@@ -49,10 +45,10 @@ public class ReservationManager implements ReservationService {
             throw new IllegalArgumentException("checkOut must be after checkIn.");
         }
 
-        Guest guest = guestRepository.findById(guestId)
+        Guest guest = guestService.getGuestById(guestId)
                 .orElseThrow(() -> new IllegalArgumentException("Guest not found: " + guestId));
 
-        RoomType roomType = roomTypeRepository.findById(roomTypeId)
+        RoomType roomType = roomService.getRoomTypeById(roomTypeId)
                 .orElseThrow(() -> new IllegalArgumentException("RoomType not found: " + roomTypeId));
 
         Reservation reservation = new Reservation();
@@ -134,7 +130,7 @@ public class ReservationManager implements ReservationService {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new IllegalArgumentException("Reservation not found: " + reservationId));
 
-        Room room = roomRepository.findById(roomId)
+        Room room = roomService.getRoomById(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("Room not found: " + roomId));
 
         reservation.setAssignedRoom(room);
@@ -155,7 +151,7 @@ public class ReservationManager implements ReservationService {
         List<Reservation> overlapping = reservationRepository.findOverlapping(roomTypeId, checkIn, checkOut);
 
         // Get all rooms of the requested type
-        List<Room> allRoomsOfType = roomRepository.findAll().stream()
+        List<Room> allRoomsOfType = roomService.getAllRooms().stream()
                 .filter(r -> r.getRoomType() != null && r.getRoomType().getRoomTypeId().equals(roomTypeId))
                 .filter(r -> "Available".equalsIgnoreCase(r.getStatus()) || r.getStatus() == null)
                 .toList();

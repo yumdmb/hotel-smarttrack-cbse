@@ -59,7 +59,7 @@ public class BillingManager implements BillingService {
         }
 
         Stay stay = stayService.getStayById(stayId)
-                .orElseThrow(() -> new RuntimeException("Stay not found: " + stayId));
+                .orElseThrow(() -> new IllegalArgumentException("Stay not found: " + stayId));
 
         // Calculate charges
         BigDecimal roomCharges = calculateRoomCharges(stay);
@@ -88,7 +88,7 @@ public class BillingManager implements BillingService {
     @Override
     public BigDecimal computeTotalCharges(Long stayId) {
         Stay stay = stayService.getStayById(stayId)
-                .orElseThrow(() -> new RuntimeException("Stay not found: " + stayId));
+                .orElseThrow(() -> new IllegalArgumentException("Stay not found: " + stayId));
 
         BigDecimal roomCharges = calculateRoomCharges(stay);
         BigDecimal incidentalCharges = calculateIncidentalCharges(stayId);
@@ -113,7 +113,7 @@ public class BillingManager implements BillingService {
     @Override
     public Payment processPayment(Long invoiceId, BigDecimal amount, String paymentMethod) {
         Invoice invoice = invoiceRepository.findById(invoiceId)
-                .orElseThrow(() -> new RuntimeException("Invoice not found: " + invoiceId));
+                .orElseThrow(() -> new IllegalArgumentException("Invoice not found: " + invoiceId));
 
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Payment amount must be positive");
@@ -165,7 +165,7 @@ public class BillingManager implements BillingService {
     @Override
     public List<Payment> getPaymentsForInvoice(Long invoiceId) {
         Invoice invoice = invoiceRepository.findById(invoiceId)
-                .orElseThrow(() -> new RuntimeException("Invoice not found: " + invoiceId));
+                .orElseThrow(() -> new IllegalArgumentException("Invoice not found: " + invoiceId));
         return invoice.getPayments() != null ? invoice.getPayments() : new ArrayList<>();
     }
 
@@ -174,7 +174,7 @@ public class BillingManager implements BillingService {
     @Override
     public BigDecimal getOutstandingBalance(Long invoiceId) {
         Invoice invoice = invoiceRepository.findById(invoiceId)
-                .orElseThrow(() -> new RuntimeException("Invoice not found: " + invoiceId));
+                .orElseThrow(() -> new IllegalArgumentException("Invoice not found: " + invoiceId));
         return invoice.getOutstandingBalance();
     }
 
@@ -205,7 +205,7 @@ public class BillingManager implements BillingService {
     @Override
     public void updateInvoiceStatus(Long invoiceId, String status) {
         Invoice invoice = invoiceRepository.findById(invoiceId)
-                .orElseThrow(() -> new RuntimeException("Invoice not found: " + invoiceId));
+                .orElseThrow(() -> new IllegalArgumentException("Invoice not found: " + invoiceId));
         invoice.setStatus(status);
         invoiceRepository.save(invoice);
     }
@@ -215,7 +215,7 @@ public class BillingManager implements BillingService {
     @Override
     public void applyDiscount(Long invoiceId, BigDecimal discountAmount, String reason) {
         Invoice invoice = invoiceRepository.findById(invoiceId)
-                .orElseThrow(() -> new RuntimeException("Invoice not found: " + invoiceId));
+                .orElseThrow(() -> new IllegalArgumentException("Invoice not found: " + invoiceId));
 
         if (discountAmount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Discount amount must be positive");
