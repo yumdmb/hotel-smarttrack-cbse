@@ -25,7 +25,7 @@ public class BillingManager implements BillingService {
     private final PaymentRepository paymentRepository;
 
     public BillingManager(InvoiceRepository invoiceRepository,
-            PaymentRepository paymentRepository) {
+                          PaymentRepository paymentRepository) {
         this.invoiceRepository = invoiceRepository;
         this.paymentRepository = paymentRepository;
     }
@@ -68,6 +68,14 @@ public class BillingManager implements BillingService {
     @Override
     public Optional<Invoice> getInvoiceById(Long invoiceId) {
         return invoiceRepository.findById(invoiceId);
+    }
+
+    // =========================
+    // 方案A：桥接方法（为 Console 兼容）
+    // BillingConsole 调用的是 findInvoiceById(...)
+    // =========================
+    public Optional<Invoice> findInvoiceById(Long invoiceId) {
+        return getInvoiceById(invoiceId);
     }
 
     @Override
