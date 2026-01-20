@@ -66,3 +66,5 @@ application-local.yml
 
 # Lombok
 .lombok/
+
+local-docs/

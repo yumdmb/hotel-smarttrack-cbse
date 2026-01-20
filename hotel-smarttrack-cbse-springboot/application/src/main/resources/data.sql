@@ -55,4 +55,4 @@ INSERT INTO reservations (guest_id, room_type_id, room_id, check_in_date, check_
 -- STAYS (Sample Data) - For active check-ins
 -- =============================================================================
 INSERT INTO stays (reservation_id, guest_id, room_id, check_in_time, check_out_time, status, key_card_number) VALUES
-(1, 1, 4, '2026-01-20 14:30:00', NULL, 'Active', 'KC-2026-0001');
+(1, 1, 4, '2026-01-20 14:30:00', NULL, 'CHECKED_IN', 'KC-2026-0001');
