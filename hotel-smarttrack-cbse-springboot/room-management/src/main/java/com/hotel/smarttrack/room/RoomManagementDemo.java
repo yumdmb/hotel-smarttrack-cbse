@@ -145,13 +145,13 @@ public class RoomManagementDemo {
         Room room = roomService.getRoomByNumber("101").orElse(null);
         if (room != null) {
             // Valid status updates
-            roomService.updateRoomStatus(room.getRoomId(), RoomStatus.OCCUPIED.getDisplayName());
+            roomService.updateRoomStatus(room.getRoomId(), "Occupied");
             System.out.println("  ✓ Room 101 → Occupied");
 
-            roomService.updateRoomStatus(room.getRoomId(), RoomStatus.UNDER_CLEANING.getDisplayName());
+            roomService.updateRoomStatus(room.getRoomId(), "Under Cleaning");
             System.out.println("  ✓ Room 101 → Under Cleaning");
 
-            roomService.updateRoomStatus(room.getRoomId(), RoomStatus.AVAILABLE.getDisplayName());
+            roomService.updateRoomStatus(room.getRoomId(), "Available");
             System.out.println("  ✓ Room 101 → Available");
 
             // Try invalid status - should fail
