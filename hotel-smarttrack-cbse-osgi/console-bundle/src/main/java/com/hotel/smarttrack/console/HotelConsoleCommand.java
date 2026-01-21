@@ -1,17 +1,17 @@
 package com.hotel.smarttrack.console;
 
 import com.hotel.smarttrack.service.*;
+import org.apache.karaf.shell.api.console.Session;
+import org.apache.karaf.shell.api.console.SessionFactory;
 import org.osgi.service.component.annotations.*;
-
-import java.util.Scanner;
 
 /**
  * HotelConsoleCommand - Main console entry point for Hotel SmartTrack OSGi.
  * 
- * This component provides an interactive terminal UI similar to the Spring Boot
- * MainMenuConsole, but using OSGi Declarative Services.
+ * This component provides an interactive terminal UI using OSGi Declarative Services
+ * with Karaf's Session for proper terminal input handling.
  * 
- * Usage: After starting in Felix, run "hotel:console" to launch the menu.
+ * Usage: In Karaf, run "hotel:console" to launch the menu.
  */
 @Component(
     service = HotelConsoleCommand.class,
@@ -23,8 +23,11 @@ import java.util.Scanner;
 )
 public class HotelConsoleCommand {
 
-    // ============ OSGi Service References ============
+    // ============ Karaf Session Reference ============
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
+    private volatile SessionFactory sessionFactory;
 
+    // ============ OSGi Service References ============
     @Reference(cardinality = ReferenceCardinality.MANDATORY)
     private volatile GuestService guestService;
 
@@ -64,74 +67,116 @@ public class HotelConsoleCommand {
 
     /**
      * Starts the interactive hotel management console.
-     * Called via: g! hotel:console
+     * Called via: hotel:console
+     * 
+     * @param session The Karaf console session (automatically injected by Gogo)
      */
-    public void console() {
-        // Initialize menus with injected services
-        guestConsoleMenu = new GuestConsoleMenu(guestService);
-        roomConsoleMenu = new RoomConsoleMenu(roomService);
-        reservationConsoleMenu = new ReservationConsoleMenu(reservationService, guestService, roomService);
-        stayConsoleMenu = new StayConsoleMenu(stayService, guestService, roomService, reservationService);
-        billingConsoleMenu = new BillingConsoleMenu(billingService, stayService);
+    public void console(Session session) {
+        // Create input helper using Karaf's session
+        ConsoleInputHelper input = new ConsoleInputHelper(session);
 
-        Scanner scanner = new Scanner(System.in);
+        // Initialize menus with injected services  
+        guestConsoleMenu = new GuestConsoleMenu(guestService, input);
+        roomConsoleMenu = new RoomConsoleMenu(roomService, input);
+        reservationConsoleMenu = new ReservationConsoleMenu(reservationService, guestService, roomService, input);
+        stayConsoleMenu = new StayConsoleMenu(stayService, guestService, roomService, reservationService, input);
+        billingConsoleMenu = new BillingConsoleMenu(billingService, stayService, input);
 
-        printWelcomeBanner();
+        printWelcomeBanner(input);
 
         boolean running = true;
         while (running) {
-            printMainMenu();
-            System.out.print("\nEnter your choice: ");
-            String choice = scanner.nextLine().trim();
+            printMainMenu(input);
+            String choice = input.readLine("\nEnter your choice: ");
 
             try {
                 switch (choice) {
-                    case "1" -> guestConsoleMenu.showMenu(scanner);
-                    case "2" -> roomConsoleMenu.showMenu(scanner);
-                    case "3" -> reservationConsoleMenu.showMenu(scanner);
-                    case "4" -> stayConsoleMenu.showMenu(scanner);
-                    case "5" -> billingConsoleMenu.showMenu(scanner);
+                    case "1" -> guestConsoleMenu.showMenu();
+                    case "2" -> roomConsoleMenu.showMenu();
+                    case "3" -> reservationConsoleMenu.showMenu();
+                    case "4" -> stayConsoleMenu.showMenu();
+                    case "5" -> billingConsoleMenu.showMenu();
                     case "0" -> {
-                        printGoodbyeBanner();
+                        printGoodbyeBanner(input);
                         running = false;
                     }
-                    default -> System.out.println("\n⚠ Invalid choice. Please enter a number from 0-5.");
+                    default -> input.println("\n⚠ Invalid choice. Please enter a number from 0-5.");
                 }
             } catch (Exception e) {
-                System.out.println("\n❌ Error: " + e.getMessage());
+                input.println("\n❌ Error: " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Fallback method without session parameter (for older Gogo versions).
+     */
+    public void console() {
+        // Fallback: use null session (ConsoleInputHelper will use System.in/out)
+        ConsoleInputHelper input = new ConsoleInputHelper(null);
+
+        // Initialize menus with injected services  
+        guestConsoleMenu = new GuestConsoleMenu(guestService, input);
+        roomConsoleMenu = new RoomConsoleMenu(roomService, input);
+        reservationConsoleMenu = new ReservationConsoleMenu(reservationService, guestService, roomService, input);
+        stayConsoleMenu = new StayConsoleMenu(stayService, guestService, roomService, reservationService, input);
+        billingConsoleMenu = new BillingConsoleMenu(billingService, stayService, input);
+
+        printWelcomeBanner(input);
+
+        boolean running = true;
+        while (running) {
+            printMainMenu(input);
+            String choice = input.readLine("\nEnter your choice: ");
+
+            try {
+                switch (choice) {
+                    case "1" -> guestConsoleMenu.showMenu();
+                    case "2" -> roomConsoleMenu.showMenu();
+                    case "3" -> reservationConsoleMenu.showMenu();
+                    case "4" -> stayConsoleMenu.showMenu();
+                    case "5" -> billingConsoleMenu.showMenu();
+                    case "0" -> {
+                        printGoodbyeBanner(input);
+                        running = false;
+                    }
+                    default -> input.println("\n⚠ Invalid choice. Please enter a number from 0-5.");
+                }
+            } catch (Exception e) {
+                input.println("\n❌ Error: " + e.getMessage());
             }
         }
     }
 
     // ============ UI Helpers ============
 
-    private void printWelcomeBanner() {
-        System.out.println("\n");
-        System.out.println("╔══════════════════════════════════════════════════════════════╗");
-        System.out.println("║            HOTEL SMARTTRACK MANAGEMENT SYSTEM                ║");
-        System.out.println("║               OSGi Component-Based Architecture              ║");
-        System.out.println("╚══════════════════════════════════════════════════════════════╝");
+    private void printWelcomeBanner(ConsoleInputHelper input) {
+        input.println("\n");
+        input.println("╔══════════════════════════════════════════════════════════════╗");
+        input.println("║            HOTEL SMARTTRACK MANAGEMENT SYSTEM                ║");
+        input.println("║               OSGi Component-Based Architecture              ║");
+        input.println("╚══════════════════════════════════════════════════════════════╝");
     }
 
-    private void printMainMenu() {
-        System.out.println("\n╔══════════════════════════════════════════════════════════════╗");
-        System.out.println("║                      MAIN MENU                               ║");
-        System.out.println("╠══════════════════════════════════════════════════════════════╣");
-        System.out.println("║                                                              ║");
-        System.out.println("║   1. Guest Management          (Ma Wenting)                  ║");
-        System.out.println("║   2. Room Management           (Eisraq Rejab)                ║");
-        System.out.println("║   3. Reservation Management    (Li Yuhang)                   ║");
-        System.out.println("║   4. Stay Management           (Elvis Sawing)                ║");
-        System.out.println("║   5. Billing & Payment         (Huang Di)                    ║");
-        System.out.println("║                                                              ║");
-        System.out.println("║   0. Exit Console                                            ║");
-        System.out.println("╚══════════════════════════════════════════════════════════════╝");
+    private void printMainMenu(ConsoleInputHelper input) {
+        input.println("\n╔══════════════════════════════════════════════════════════════╗");
+        input.println("║                      MAIN MENU                               ║");
+        input.println("╠══════════════════════════════════════════════════════════════╣");
+        input.println("║                                                              ║");
+        input.println("║   1. Guest Management          (Ma Wenting)                  ║");
+        input.println("║   2. Room Management           (Eisraq Rejab)                ║");
+        input.println("║   3. Reservation Management    (Li Yuhang)                   ║");
+        input.println("║   4. Stay Management           (Elvis Sawing)                ║");
+        input.println("║   5. Billing & Payment         (Huang Di)                    ║");
+        input.println("║                                                              ║");
+        input.println("║   0. Exit Console                                            ║");
+        input.println("╚══════════════════════════════════════════════════════════════╝");
     }
 
-    private void printGoodbyeBanner() {
-        System.out.println("\n");
-        System.out.println("╔══════════════════════════════════════════════════════════════╗");
-        System.out.println("║     Thank you for using Hotel SmartTrack. Goodbye!           ║");
-        System.out.println("╚══════════════════════════════════════════════════════════════╝");
+    private void printGoodbyeBanner(ConsoleInputHelper input) {
+        input.println("\n");
+        input.println("╔══════════════════════════════════════════════════════════════╗");
+        input.println("║     Thank you for using Hotel SmartTrack. Goodbye!           ║");
+        input.println("╚══════════════════════════════════════════════════════════════╝");
     }
 }

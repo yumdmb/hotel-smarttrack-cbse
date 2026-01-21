@@ -6,7 +6,6 @@ import com.hotel.smarttrack.service.StayService;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Scanner;
 
 /**
  * Billing & Payment Console Menu.
@@ -16,164 +15,150 @@ public class BillingConsoleMenu {
 
     private final BillingService billingService;
     private final StayService stayService;
+    private final ConsoleInputHelper input;
 
-    public BillingConsoleMenu(BillingService billingService, StayService stayService) {
+    public BillingConsoleMenu(BillingService billingService, StayService stayService, ConsoleInputHelper input) {
         this.billingService = billingService;
         this.stayService = stayService;
+        this.input = input;
     }
 
-    public void showMenu(Scanner scanner) {
+    public void showMenu() {
         if (billingService == null) {
-            System.out.println("\n⚠ Billing Service is not available.");
-            System.out.println("Make sure the billing-payment-bundle is installed and started.");
+            input.println("\n⚠ Billing Service is not available.");
+            input.println("Make sure the billing-payment-bundle is installed and started.");
             return;
         }
 
         boolean running = true;
         while (running) {
-            System.out.println("\n==============================");
-            System.out.println("      BILLING & PAYMENT       ");
-            System.out.println("==============================");
-            System.out.println("1. List All Invoices");
-            System.out.println("2. List Unpaid Invoices");
-            System.out.println("3. Generate Invoice for Stay");
-            System.out.println("4. Process Payment");
-            System.out.println("5. View Invoice Details");
-            System.out.println("6. View Stays Ready for Invoicing");
-            System.out.println("0. Back to Main Menu");
-            System.out.print("Choose: ");
+            input.println("\n==============================");
+            input.println("      BILLING & PAYMENT       ");
+            input.println("==============================");
+            input.println("1. List All Invoices");
+            input.println("2. List Unpaid Invoices");
+            input.println("3. Generate Invoice for Stay");
+            input.println("4. Process Payment");
+            input.println("5. View Invoice Details");
+            input.println("6. View Stays Ready for Invoicing");
+            input.println("0. Back to Main Menu");
 
-            String choice = scanner.nextLine().trim();
+            String choice = input.readLine("Choose: ");
             try {
                 switch (choice) {
                     case "1" -> listAllInvoices();
                     case "2" -> listUnpaidInvoices();
-                    case "3" -> generateInvoice(scanner);
-                    case "4" -> processPayment(scanner);
-                    case "5" -> viewInvoiceDetails(scanner);
+                    case "3" -> generateInvoice();
+                    case "4" -> processPayment();
+                    case "5" -> viewInvoiceDetails();
                     case "6" -> viewStaysReadyForInvoicing();
                     case "0" -> running = false;
-                    default -> System.out.println("Invalid option.");
+                    default -> input.println("Invalid option.");
                 }
             } catch (IllegalArgumentException ex) {
-                System.out.println("❌ Error: " + ex.getMessage());
+                input.println("❌ Error: " + ex.getMessage());
             } catch (Exception ex) {
-                System.out.println("❌ Unexpected error: " + ex.getMessage());
+                input.println("❌ Unexpected error: " + ex.getMessage());
             }
         }
     }
 
     private void listAllInvoices() {
-        // OSGi API: getAllInvoices() not listAllInvoices()
         List<Invoice> invoices = billingService.getAllInvoices();
         if (invoices.isEmpty()) {
-            System.out.println("No invoices found.");
+            input.println("No invoices found.");
             return;
         }
-        System.out.println("\n--- All Invoices ---");
+        input.println("\n--- All Invoices ---");
         invoices.forEach(this::printInvoiceSummary);
     }
 
     private void listUnpaidInvoices() {
         List<Invoice> invoices = billingService.getUnpaidInvoices();
         if (invoices.isEmpty()) {
-            System.out.println("No unpaid invoices found.");
+            input.println("No unpaid invoices found.");
             return;
         }
-        System.out.println("\n--- Unpaid Invoices ---");
+        input.println("\n--- Unpaid Invoices ---");
         invoices.forEach(this::printInvoiceSummary);
     }
 
-    private void generateInvoice(Scanner scanner) {
+    private void generateInvoice() {
         // Show stays that can be invoiced
         viewStaysReadyForInvoicing();
         
-        Long stayId = readLong(scanner, "Stay ID to generate invoice for: ");
+        Long stayId = input.readLong("Stay ID to generate invoice for: ");
         
         Invoice invoice = billingService.generateInvoice(stayId);
-        System.out.println("✅ Invoice generated successfully!");
+        input.println("✅ Invoice generated successfully!");
         printInvoiceDetails(invoice);
     }
 
-    private void processPayment(Scanner scanner) {
+    private void processPayment() {
         // Show unpaid invoices
         listUnpaidInvoices();
         
-        Long invoiceId = readLong(scanner, "Invoice ID: ");
-        BigDecimal amount = readBigDecimal(scanner, "Payment Amount: ");
-        System.out.print("Payment Method (Cash/Credit Card/Debit Card/Digital Wallet): ");
-        String paymentMethod = scanner.nextLine().trim();
+        Long invoiceId = input.readLong("Invoice ID: ");
+        BigDecimal amount = readBigDecimal("Payment Amount: ");
+        String paymentMethod = input.readLine("Payment Method (Cash/Credit Card/Debit Card/Digital Wallet): ");
         
         billingService.processPayment(invoiceId, amount, paymentMethod);
-        System.out.println("✅ Payment processed successfully!");
+        input.println("✅ Payment processed successfully!");
         
         // Show updated invoice
         billingService.getInvoiceById(invoiceId).ifPresent(this::printInvoiceDetails);
     }
 
-    private void viewInvoiceDetails(Scanner scanner) {
-        Long invoiceId = readLong(scanner, "Invoice ID: ");
+    private void viewInvoiceDetails() {
+        Long invoiceId = input.readLong("Invoice ID: ");
         billingService.getInvoiceById(invoiceId).ifPresentOrElse(
             this::printInvoiceDetails,
-            () -> System.out.println("❌ Invoice not found.")
+            () -> input.println("❌ Invoice not found.")
         );
     }
 
     private void viewStaysReadyForInvoicing() {
         if (stayService == null) {
-            System.out.println("Stay service not available.");
+            input.println("Stay service not available.");
             return;
         }
         
-        System.out.println("\n--- Active Stays (may need invoicing) ---");
+        input.println("\n--- Active Stays (may need invoicing) ---");
         stayService.getActiveStays().forEach(s ->
-            System.out.printf("ID=%d | Guest: %s | Room: %s | Status: %s%n",
+            input.println(String.format("ID=%d | Guest: %s | Room: %s | Status: %s",
                 s.getStayId(),
                 s.getGuest() != null ? s.getGuest().getName() : "N/A",
                 s.getRoom() != null ? s.getRoom().getRoomNumber() : "N/A",
-                s.getStatus()));
+                s.getStatus())));
     }
 
     private void printInvoiceSummary(Invoice inv) {
-        System.out.printf("ID=%d | Stay=%s | Amount=$%s | Status=%s%n",
+        input.println(String.format("ID=%d | Stay=%s | Amount=$%s | Status=%s",
             inv.getInvoiceId(),
             inv.getStayId() != null ? inv.getStayId() : "N/A",
             inv.getAmount() != null ? inv.getAmount() : "0",
-            inv.getStatus());
+            inv.getStatus()));
     }
 
     private void printInvoiceDetails(Invoice inv) {
-        System.out.println("\n--- Invoice Details ---");
-        System.out.println("Invoice ID:     " + inv.getInvoiceId());
-        System.out.println("Stay ID:        " + (inv.getStayId() != null ? inv.getStayId() : "N/A"));
-        System.out.println("Reservation ID: " + (inv.getReservationId() != null ? inv.getReservationId() : "N/A"));
-        System.out.println("Amount:         $" + (inv.getAmount() != null ? inv.getAmount() : "0"));
-        System.out.println("Status:         " + inv.getStatus());
-        System.out.println("Issued At:      " + inv.getIssuedAt());
+        input.println("\n--- Invoice Details ---");
+        input.println("Invoice ID:     " + inv.getInvoiceId());
+        input.println("Stay ID:        " + (inv.getStayId() != null ? inv.getStayId() : "N/A"));
+        input.println("Reservation ID: " + (inv.getReservationId() != null ? inv.getReservationId() : "N/A"));
+        input.println("Amount:         $" + (inv.getAmount() != null ? inv.getAmount() : "0"));
+        input.println("Status:         " + inv.getStatus());
+        input.println("Issued At:      " + inv.getIssuedAt());
     }
 
     // ============ Utility Methods ============
 
-    private Long readLong(Scanner scanner, String prompt) {
+    private BigDecimal readBigDecimal(String prompt) {
         while (true) {
-            System.out.print(prompt);
-            String s = scanner.nextLine().trim();
-            try {
-                return Long.parseLong(s);
-            } catch (NumberFormatException e) {
-                System.out.println("Please enter a valid number.");
-            }
-        }
-    }
-
-    private BigDecimal readBigDecimal(Scanner scanner, String prompt) {
-        while (true) {
-            System.out.print(prompt);
-            String s = scanner.nextLine().trim();
+            String s = input.readLine(prompt);
             try {
                 return new BigDecimal(s);
             } catch (NumberFormatException e) {
-                System.out.println("Please enter a valid decimal number.");
+                input.println("Please enter a valid decimal number.");
             }
         }
     }

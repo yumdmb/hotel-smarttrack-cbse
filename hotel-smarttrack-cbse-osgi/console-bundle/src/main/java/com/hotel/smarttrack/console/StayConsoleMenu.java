@@ -12,7 +12,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import java.util.Scanner;
 
 /**
  * Stay Management Console Menu.
@@ -24,54 +23,56 @@ public class StayConsoleMenu {
     private final GuestService guestService;
     private final RoomService roomService;
     private final ReservationService reservationService;
+    private final ConsoleInputHelper input;
 
     public StayConsoleMenu(StayService stayService,
                            GuestService guestService,
                            RoomService roomService,
-                           ReservationService reservationService) {
+                           ReservationService reservationService,
+                           ConsoleInputHelper input) {
         this.stayService = stayService;
         this.guestService = guestService;
         this.roomService = roomService;
         this.reservationService = reservationService;
+        this.input = input;
     }
 
-    public void showMenu(Scanner scanner) {
+    public void showMenu() {
         boolean running = true;
         while (running) {
-            System.out.println("\n==============================");
-            System.out.println("       STAY MANAGEMENT        ");
-            System.out.println("==============================");
-            System.out.println("1. View All Active Stays");
-            System.out.println("2. View Stay by ID");
-            System.out.println("3. Check-In (from Reservation)");
-            System.out.println("4. Check-In (Walk-In)");
-            System.out.println("5. Check-Out");
-            System.out.println("6. Record Incidental Charge");
-            System.out.println("7. View Charges for Stay");
-            System.out.println("8. View Outstanding Balance");
-            System.out.println("9. View Guest Stay History");
-            System.out.println("0. Back to Main Menu");
-            System.out.print("Choose: ");
+            input.println("\n==============================");
+            input.println("       STAY MANAGEMENT        ");
+            input.println("==============================");
+            input.println("1. View All Active Stays");
+            input.println("2. View Stay by ID");
+            input.println("3. Check-In (from Reservation)");
+            input.println("4. Check-In (Walk-In)");
+            input.println("5. Check-Out");
+            input.println("6. Record Incidental Charge");
+            input.println("7. View Charges for Stay");
+            input.println("8. View Outstanding Balance");
+            input.println("9. View Guest Stay History");
+            input.println("0. Back to Main Menu");
 
-            String choice = scanner.nextLine().trim();
+            String choice = input.readLine("Choose: ");
             try {
                 switch (choice) {
                     case "1" -> viewActiveStays();
-                    case "2" -> viewStayById(scanner);
-                    case "3" -> checkInFromReservation(scanner);
-                    case "4" -> checkInWalkIn(scanner);
-                    case "5" -> checkOut(scanner);
-                    case "6" -> recordCharge(scanner);
-                    case "7" -> viewChargesForStay(scanner);
-                    case "8" -> viewOutstandingBalance(scanner);
-                    case "9" -> viewGuestStayHistory(scanner);
+                    case "2" -> viewStayById();
+                    case "3" -> checkInFromReservation();
+                    case "4" -> checkInWalkIn();
+                    case "5" -> checkOut();
+                    case "6" -> recordCharge();
+                    case "7" -> viewChargesForStay();
+                    case "8" -> viewOutstandingBalance();
+                    case "9" -> viewGuestStayHistory();
                     case "0" -> running = false;
-                    default -> System.out.println("Invalid option.");
+                    default -> input.println("Invalid option.");
                 }
             } catch (IllegalArgumentException | IllegalStateException ex) {
-                System.out.println("❌ Error: " + ex.getMessage());
+                input.println("❌ Error: " + ex.getMessage());
             } catch (Exception ex) {
-                System.out.println("❌ Unexpected error: " + ex.getMessage());
+                input.println("❌ Unexpected error: " + ex.getMessage());
             }
         }
     }
@@ -79,175 +80,160 @@ public class StayConsoleMenu {
     private void viewActiveStays() {
         List<Stay> stays = stayService.getActiveStays();
         if (stays.isEmpty()) {
-            System.out.println("No active stays.");
+            input.println("No active stays.");
             return;
         }
-        System.out.println("\n--- Active Stays ---");
+        input.println("\n--- Active Stays ---");
         stays.forEach(this::printStay);
     }
 
-    private void viewStayById(Scanner scanner) {
-        Long id = readLong(scanner, "Stay ID: ");
+    private void viewStayById() {
+        Long id = input.readLong("Stay ID: ");
         Optional<Stay> stay = stayService.getStayById(id);
         stay.ifPresentOrElse(
             this::printStayDetails,
-            () -> System.out.println("Stay not found.")
+            () -> input.println("Stay not found.")
         );
     }
 
-    private void checkInFromReservation(Scanner scanner) {
+    private void checkInFromReservation() {
         // Show confirmed reservations
-        System.out.println("\n--- Confirmed Reservations ---");
+        input.println("\n--- Confirmed Reservations ---");
         reservationService.getAllReservations().stream()
             .filter(r -> "CONFIRMED".equalsIgnoreCase(r.getStatus()) || "Confirmed".equals(r.getStatus()))
-            .forEach(r -> System.out.printf("ID=%d | Guest: %s | Room: %s | %s%n",
+            .forEach(r -> input.println(String.format("ID=%d | Guest: %s | Room: %s | %s",
                 r.getReservationId(),
                 r.getGuest() != null ? r.getGuest().getName() : "N/A",
                 r.getAssignedRoom() != null ? r.getAssignedRoom().getRoomNumber() : "Not assigned",
-                r.getCheckInDate()));
+                r.getCheckInDate())));
         
-        Long reservationId = readLong(scanner, "Reservation ID to check in: ");
+        Long reservationId = input.readLong("Reservation ID to check in: ");
         
         Stay stay = stayService.checkInGuest(reservationId);
-        System.out.println("✅ Guest checked in successfully!");
+        input.println("✅ Guest checked in successfully!");
         printStayDetails(stay);
     }
 
-    private void checkInWalkIn(Scanner scanner) {
+    private void checkInWalkIn() {
         // Show available guests
-        System.out.println("\n--- Guests ---");
+        input.println("\n--- Guests ---");
         guestService.getAllGuests().forEach(g ->
-            System.out.printf("ID=%d | %s | %s%n", g.getGuestId(), g.getName(), g.getEmail()));
+            input.println(String.format("ID=%d | %s | %s", g.getGuestId(), g.getName(), g.getEmail())));
         
-        Long guestId = readLong(scanner, "Guest ID: ");
+        Long guestId = input.readLong("Guest ID: ");
         
         // Show available rooms for today
         LocalDate today = LocalDate.now();
         LocalDate tomorrow = today.plusDays(1);
-        System.out.println("\n--- Available Rooms ---");
+        input.println("\n--- Available Rooms ---");
         List<Room> availableRooms = roomService.getAvailableRooms(today, tomorrow);
         availableRooms.forEach(r ->
-            System.out.printf("ID=%d | Room %s | %s | $%s/night%n",
+            input.println(String.format("ID=%d | Room %s | %s | $%s/night",
                 r.getRoomId(), r.getRoomNumber(),
                 r.getRoomType() != null ? r.getRoomType().getTypeName() : "N/A",
-                r.getRoomType() != null ? r.getRoomType().getBasePrice() : "N/A"));
+                r.getRoomType() != null ? r.getRoomType().getBasePrice() : "N/A")));
         
         if (availableRooms.isEmpty()) {
-            System.out.println("No available rooms.");
+            input.println("No available rooms.");
             return;
         }
         
-        Long roomId = readLong(scanner, "Room ID: ");
+        Long roomId = input.readLong("Room ID: ");
         
         Stay stay = stayService.checkInWalkIn(guestId, roomId);
-        System.out.println("✅ Walk-in guest checked in successfully!");
+        input.println("✅ Walk-in guest checked in successfully!");
         printStayDetails(stay);
     }
 
-    private void checkOut(Scanner scanner) {
+    private void checkOut() {
         // Show active stays
-        System.out.println("\n--- Active Stays ---");
+        input.println("\n--- Active Stays ---");
         stayService.getActiveStays().forEach(s ->
-            System.out.printf("ID=%d | Guest: %s | Room: %s%n",
+            input.println(String.format("ID=%d | Guest: %s | Room: %s",
                 s.getStayId(),
                 s.getGuest() != null ? s.getGuest().getName() : "N/A",
-                s.getRoom() != null ? s.getRoom().getRoomNumber() : "N/A"));
+                s.getRoom() != null ? s.getRoom().getRoomNumber() : "N/A")));
         
-        Long stayId = readLong(scanner, "Stay ID to check out: ");
+        Long stayId = input.readLong("Stay ID to check out: ");
         
         stayService.checkOutGuest(stayId);
-        System.out.println("✅ Guest checked out successfully!");
+        input.println("✅ Guest checked out successfully!");
     }
 
-    private void recordCharge(Scanner scanner) {
-        Long stayId = readLong(scanner, "Stay ID: ");
-        System.out.print("Service Type (Minibar/Room Service/Laundry/Spa/Phone/Other): ");
-        String serviceType = scanner.nextLine();
-        System.out.print("Description: ");
-        String description = scanner.nextLine();
-        BigDecimal amount = readBigDecimal(scanner, "Amount: ");
+    private void recordCharge() {
+        Long stayId = input.readLong("Stay ID: ");
+        String serviceType = input.readLine("Service Type (Minibar/Room Service/Laundry/Spa/Phone/Other): ");
+        String description = input.readLine("Description: ");
+        BigDecimal amount = readBigDecimal("Amount: ");
         
         IncidentalCharge charge = stayService.recordCharge(stayId, serviceType, description, amount);
-        System.out.println("✅ Charge recorded: $" + charge.getAmount());
+        input.println("✅ Charge recorded: $" + charge.getAmount());
     }
 
-    private void viewChargesForStay(Scanner scanner) {
-        Long stayId = readLong(scanner, "Stay ID: ");
+    private void viewChargesForStay() {
+        Long stayId = input.readLong("Stay ID: ");
         List<IncidentalCharge> charges = stayService.getChargesForStay(stayId);
         if (charges.isEmpty()) {
-            System.out.println("No charges for this stay.");
+            input.println("No charges for this stay.");
             return;
         }
-        System.out.println("\n--- Incidental Charges ---");
+        input.println("\n--- Incidental Charges ---");
         BigDecimal total = BigDecimal.ZERO;
         for (IncidentalCharge c : charges) {
-            System.out.printf("  %s - %s: $%s (%s)%n",
-                c.getServiceType(), c.getDescription(), c.getAmount(), c.getChargeTime());
+            input.println(String.format("  %s - %s: $%s (%s)",
+                c.getServiceType(), c.getDescription(), c.getAmount(), c.getChargeTime()));
             total = total.add(c.getAmount());
         }
-        System.out.println("Total: $" + total);
+        input.println("Total: $" + total);
     }
 
-    private void viewOutstandingBalance(Scanner scanner) {
-        Long stayId = readLong(scanner, "Stay ID: ");
+    private void viewOutstandingBalance() {
+        Long stayId = input.readLong("Stay ID: ");
         BigDecimal balance = stayService.getOutstandingBalance(stayId);
-        System.out.println("Outstanding Balance: $" + balance);
+        input.println("Outstanding Balance: $" + balance);
     }
 
-    private void viewGuestStayHistory(Scanner scanner) {
-        Long guestId = readLong(scanner, "Guest ID: ");
+    private void viewGuestStayHistory() {
+        Long guestId = input.readLong("Guest ID: ");
         List<Stay> stays = stayService.getGuestStayHistory(guestId);
         if (stays.isEmpty()) {
-            System.out.println("No stay history for this guest.");
+            input.println("No stay history for this guest.");
             return;
         }
-        System.out.println("\n--- Guest Stay History ---");
+        input.println("\n--- Guest Stay History ---");
         stays.forEach(this::printStay);
     }
 
     private void printStay(Stay stay) {
-        System.out.printf("ID=%d | Guest: %s | Room: %s | Status: %s | In: %s | Out: %s%n",
+        input.println(String.format("ID=%d | Guest: %s | Room: %s | Status: %s | In: %s | Out: %s",
             stay.getStayId(),
             stay.getGuest() != null ? stay.getGuest().getName() : "N/A",
             stay.getRoom() != null ? stay.getRoom().getRoomNumber() : "N/A",
             stay.getStatus(),
             stay.getCheckInTime(),
-            stay.getCheckOutTime() != null ? stay.getCheckOutTime() : "Still checked in");
+            stay.getCheckOutTime() != null ? stay.getCheckOutTime() : "Still checked in"));
     }
 
     private void printStayDetails(Stay stay) {
-        System.out.println("\n--- Stay Details ---");
-        System.out.println("Stay ID:        " + stay.getStayId());
-        System.out.println("Guest:          " + (stay.getGuest() != null ? stay.getGuest().getName() : "N/A"));
-        System.out.println("Room:           " + (stay.getRoom() != null ? stay.getRoom().getRoomNumber() : "N/A"));
-        System.out.println("Check-In Time:  " + stay.getCheckInTime());
-        System.out.println("Check-Out Time: " + (stay.getCheckOutTime() != null ? stay.getCheckOutTime() : "Still checked in"));
-        System.out.println("Status:         " + stay.getStatus());
-        System.out.println("Key Card:       " + (stay.getKeyCardNumber() != null ? stay.getKeyCardNumber() : "Not assigned"));
+        input.println("\n--- Stay Details ---");
+        input.println("Stay ID:        " + stay.getStayId());
+        input.println("Guest:          " + (stay.getGuest() != null ? stay.getGuest().getName() : "N/A"));
+        input.println("Room:           " + (stay.getRoom() != null ? stay.getRoom().getRoomNumber() : "N/A"));
+        input.println("Check-In Time:  " + stay.getCheckInTime());
+        input.println("Check-Out Time: " + (stay.getCheckOutTime() != null ? stay.getCheckOutTime() : "Still checked in"));
+        input.println("Status:         " + stay.getStatus());
+        input.println("Key Card:       " + (stay.getKeyCardNumber() != null ? stay.getKeyCardNumber() : "Not assigned"));
     }
 
     // ============ Utility Methods ============
 
-    private Long readLong(Scanner scanner, String prompt) {
+    private BigDecimal readBigDecimal(String prompt) {
         while (true) {
-            System.out.print(prompt);
-            String s = scanner.nextLine().trim();
-            try {
-                return Long.parseLong(s);
-            } catch (NumberFormatException e) {
-                System.out.println("Please enter a valid number.");
-            }
-        }
-    }
-
-    private BigDecimal readBigDecimal(Scanner scanner, String prompt) {
-        while (true) {
-            System.out.print(prompt);
-            String s = scanner.nextLine().trim();
+            String s = input.readLine(prompt);
             try {
                 return new BigDecimal(s);
             } catch (NumberFormatException e) {
-                System.out.println("Please enter a valid decimal number.");
+                input.println("Please enter a valid decimal number.");
             }
         }
     }

@@ -43,3 +43,9 @@ build/
 # Apache Felix distribution
 felix/
 felix.zip
+
+# Apache Karaf distribution
+karaf/
+karaf.zip
+apache-karaf-*/
+apache-karaf-*.zip

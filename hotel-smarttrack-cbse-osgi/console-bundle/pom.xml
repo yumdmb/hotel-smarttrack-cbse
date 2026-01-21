@@ -35,6 +35,12 @@
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.component.annotations</artifactId>
         </dependency>
+        
+        <!-- Karaf Shell API (for proper console input) -->
+        <dependency>
+            <groupId>org.apache.karaf.shell</groupId>
+            <artifactId>org.apache.karaf.shell.core</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -50,6 +56,9 @@ Bundle-Version: ${project.version}
 Import-Package: \
     com.hotel.smarttrack.entity,\
     com.hotel.smarttrack.service,\
+    org.apache.karaf.shell.api.action;resolution:=optional,\
+    org.apache.karaf.shell.api.action.lifecycle;resolution:=optional,\
+    org.apache.karaf.shell.api.console;resolution:=optional,\
     org.osgi.service.component.annotations;resolution:=optional
 Private-Package: com.hotel.smarttrack.console
 -dsannotations: *
