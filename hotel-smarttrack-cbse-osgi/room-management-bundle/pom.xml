@@ -42,10 +42,11 @@
 Bundle-SymbolicName: ${project.artifactId}
 Bundle-Name: ${project.name}
 Bundle-Version: ${project.version}
-Private-Package: com.hotel.smarttrack.room.impl
+Private-Package: com.hotel.smarttrack.room
 Import-Package: \
     com.hotel.smarttrack.entity,\
     com.hotel.smarttrack.service,\
+    org.osgi.service.component.annotations;resolution:=optional,\
     *
 -dsannotations: *
                     ]]></bnd>
