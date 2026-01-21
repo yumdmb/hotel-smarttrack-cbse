@@ -27,9 +27,9 @@ public class StayManager implements StayService {
     // Status constants
     private static final String STATUS_CHECKED_IN = "CHECKED_IN";
     private static final String STATUS_CHECKED_OUT = "CHECKED_OUT";
-    private static final String ROOM_OCCUPIED = "Occupied";
-    private static final String ROOM_AVAILABLE = "Available";
-    private static final String ROOM_CLEANING = "Under Cleaning";
+    private static final String ROOM_OCCUPIED = "OCCUPIED";
+    private static final String ROOM_AVAILABLE = "AVAILABLE";
+    private static final String ROOM_CLEANING = "UNDER_CLEANING";
 
     // In-memory repositories
     private final StayRepository stayRepository = new StayRepository();
@@ -102,7 +102,7 @@ public class StayManager implements StayService {
                 .orElseThrow(() -> new IllegalArgumentException("Reservation not found: " + reservationId));
 
         String status = reservation.getStatus();
-        if ("Cancelled".equals(status) || "No-Show".equals(status)) {
+        if ("CANCELLED".equals(status) || "NO_SHOW".equals(status)) {
             throw new IllegalStateException("Cannot check-in: Reservation is " + status);
         }
 

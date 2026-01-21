@@ -22,16 +22,20 @@ public class GuestManager implements GuestService {
         System.out.println("  - UC4  Manage Guest Status (Active/Inactive/Blacklisted)");
         System.out.println("==============================================");
 
-        // seed 1 safe guest (only using known setters from Guest entity)
-        Guest g = new Guest();
-        g.setName("Seed Guest");
-        g.setEmail("seed@guest.com");
-        g.setPhone("0100000000");
-        g.setIdentificationNumber("SEED-001");
-        g.setStatus("ACTIVE");
-        repo.save(g);
+        loadSeedData();
+        System.out.println("[GuestManager] Loaded " + repo.findAll().size() + " guests");
+    }
 
-        System.out.println("[GuestManager] Seed: created 1 guest ✅");
+    private void loadSeedData() {
+        // Seed data per SEED_DATA_SPEC.md - IDs 1-4
+        repo.save(new Guest(null, "John Doe", "john.doe@email.com",
+                "+1-555-0101", "ID001", "ACTIVE", null));
+        repo.save(new Guest(null, "Jane Smith", "jane.smith@email.com",
+                "+1-555-0102", "ID002", "ACTIVE", null));
+        repo.save(new Guest(null, "Bob Wilson", "bob.wilson@email.com",
+                "+1-555-0103", "ID003", "ACTIVE", null));
+        repo.save(new Guest(null, "Alice Brown", "alice.brown@email.com",
+                "+1-555-0104", "ID004", "INACTIVE", "Account suspended"));
     }
 
     @Deactivate

@@ -1,7 +1,12 @@
 package com.hotel.smarttrack.reservation.impl;
 
+import com.hotel.smarttrack.entity.Guest;
 import com.hotel.smarttrack.entity.Reservation;
+import com.hotel.smarttrack.entity.Room;
+import com.hotel.smarttrack.entity.RoomType;
+import com.hotel.smarttrack.service.GuestService;
 import com.hotel.smarttrack.service.ReservationService;
+import com.hotel.smarttrack.service.RoomService;
 import org.osgi.service.component.annotations.*;
 
 import java.time.LocalDate;
@@ -14,26 +19,62 @@ public class ReservationManager implements ReservationService {
 
     private final ReservationRepository repo = new ReservationRepository();
 
+    // ============ OSGi Service References ============
+
+    @Reference(cardinality = ReferenceCardinality.MANDATORY)
+    private volatile GuestService guestService;
+
+    @Reference(cardinality = ReferenceCardinality.MANDATORY)
+    private volatile RoomService roomService;
+
     @Activate
     public void activate() {
         System.out.println("==============================================");
         System.out.println("[ReservationManager] Bundle ACTIVATED ✅");
         System.out.println("  - Service Registered: ReservationService");
+        System.out.println("  - GuestService: " + (guestService != null ? "available" : "missing"));
+        System.out.println("  - RoomService: " + (roomService != null ? "available" : "missing"));
         System.out.println("  - UC9  Reservation Operations (CRUD)");
-        System.out.println("  - UC10 Search Available Rooms (stub)");
+        System.out.println("  - UC10 Search Available Rooms");
         System.out.println("  - UC11 Manage Reservation Allocation");
         System.out.println("  - UC12 Track Reservation Status");
         System.out.println("==============================================");
 
-        Reservation r = new Reservation();
-        r.setStatus("Reserved");
-        r.setNumberOfGuests(1);
-        r.setCheckInDate(LocalDate.now().plusDays(1));
-        r.setCheckOutDate(LocalDate.now().plusDays(2));
-        r.setSpecialRequests("Seed reservation (safe)");
-        repo.save(r);
+        loadSeedData();
+        System.out.println("[ReservationManager] Loaded " + repo.findAll().size() + " reservations");
+    }
 
-        System.out.println("[ReservationManager] Seed: created 1 reservation ✅");
+    private void loadSeedData() {
+        try {
+            // Get data from other services per SEED_DATA_SPEC.md
+            Guest john = guestService.getGuestById(1L).orElseThrow(
+                    () -> new RuntimeException("Guest ID 1 not found"));
+            Guest jane = guestService.getGuestById(2L).orElseThrow(
+                    () -> new RuntimeException("Guest ID 2 not found"));
+            RoomType deluxe = roomService.getRoomTypeById(2L).orElseThrow(
+                    () -> new RuntimeException("RoomType ID 2 not found"));
+            RoomType standard = roomService.getRoomTypeById(1L).orElseThrow(
+                    () -> new RuntimeException("RoomType ID 1 not found"));
+            Room room201 = roomService.getRoomById(3L).orElseThrow(
+                    () -> new RuntimeException("Room ID 3 not found"));
+            Room room101 = roomService.getRoomById(1L).orElseThrow(
+                    () -> new RuntimeException("Room ID 1 not found"));
+
+            // Reservation 1: John Doe, Deluxe Room 201
+            Reservation r1 = new Reservation(null, john, deluxe, room201,
+                    LocalDate.of(2026, 1, 25), LocalDate.of(2026, 1, 27),
+                    2, "CONFIRMED", "Late check-in requested");
+            repo.save(r1);
+
+            // Reservation 2: Jane Smith, Standard Room 101
+            Reservation r2 = new Reservation(null, jane, standard, room101,
+                    LocalDate.of(2026, 1, 26), LocalDate.of(2026, 1, 28),
+                    1, "CONFIRMED", null);
+            repo.save(r2);
+
+        } catch (Exception e) {
+            System.out.println("[ReservationManager] WARNING: Could not load seed data - " + e.getMessage());
+        }
     }
 
     @Deactivate
@@ -43,16 +84,27 @@ public class ReservationManager implements ReservationService {
 
     @Override
     public Reservation createReservation(Long guestId, Long roomTypeId, LocalDate checkIn,
-                                         LocalDate checkOut, int numberOfGuests, String specialRequests) {
-        if (checkIn == null || checkOut == null) throw new IllegalArgumentException("checkIn/checkOut required");
-        if (!checkOut.isAfter(checkIn)) throw new IllegalArgumentException("checkOut must be after checkIn");
-        if (numberOfGuests <= 0) throw new IllegalArgumentException("numberOfGuests must be > 0");
+            LocalDate checkOut, int numberOfGuests, String specialRequests) {
+        if (checkIn == null || checkOut == null)
+            throw new IllegalArgumentException("checkIn/checkOut required");
+        if (!checkOut.isAfter(checkIn))
+            throw new IllegalArgumentException("checkOut must be after checkIn");
+        if (numberOfGuests <= 0)
+            throw new IllegalArgumentException("numberOfGuests must be > 0");
+
+        // Get guest and room type from services
+        Guest guest = guestService.getGuestById(guestId)
+                .orElseThrow(() -> new IllegalArgumentException("Guest not found: " + guestId));
+        RoomType roomType = roomService.getRoomTypeById(roomTypeId)
+                .orElseThrow(() -> new IllegalArgumentException("RoomType not found: " + roomTypeId));
 
         Reservation r = new Reservation();
+        r.setGuest(guest);
+        r.setRoomType(roomType);
         r.setCheckInDate(checkIn);
         r.setCheckOutDate(checkOut);
         r.setNumberOfGuests(numberOfGuests);
-        r.setStatus("Reserved");
+        r.setStatus("RESERVED");
         r.setSpecialRequests(specialRequests);
 
         return repo.save(r);
@@ -60,18 +112,21 @@ public class ReservationManager implements ReservationService {
 
     @Override
     public Reservation modifyReservation(Long reservationId, LocalDate newCheckIn,
-                                         LocalDate newCheckOut, int numberOfGuests) {
+            LocalDate newCheckOut, int numberOfGuests) {
         Reservation r = repo.findById(reservationId)
                 .orElseThrow(() -> new IllegalArgumentException("Reservation not found: " + reservationId));
 
         String status = r.getStatus() == null ? "" : r.getStatus();
-        if ("Checked-In".equalsIgnoreCase(status) || "Cancelled".equalsIgnoreCase(status)) {
+        if ("CHECKED_IN".equalsIgnoreCase(status) || "CANCELLED".equalsIgnoreCase(status)) {
             throw new IllegalStateException("Cannot modify reservation in status: " + status);
         }
 
-        if (newCheckIn == null || newCheckOut == null) throw new IllegalArgumentException("newCheckIn/newCheckOut required");
-        if (!newCheckOut.isAfter(newCheckIn)) throw new IllegalArgumentException("newCheckOut must be after newCheckIn");
-        if (numberOfGuests <= 0) throw new IllegalArgumentException("numberOfGuests must be > 0");
+        if (newCheckIn == null || newCheckOut == null)
+            throw new IllegalArgumentException("newCheckIn/newCheckOut required");
+        if (!newCheckOut.isAfter(newCheckIn))
+            throw new IllegalArgumentException("newCheckOut must be after newCheckIn");
+        if (numberOfGuests <= 0)
+            throw new IllegalArgumentException("numberOfGuests must be > 0");
 
         r.setCheckInDate(newCheckIn);
         r.setCheckOutDate(newCheckOut);
@@ -85,11 +140,11 @@ public class ReservationManager implements ReservationService {
                 .orElseThrow(() -> new IllegalArgumentException("Reservation not found: " + reservationId));
 
         String status = r.getStatus() == null ? "" : r.getStatus();
-        if ("Checked-In".equalsIgnoreCase(status) || "Cancelled".equalsIgnoreCase(status)) {
+        if ("CHECKED_IN".equalsIgnoreCase(status) || "CANCELLED".equalsIgnoreCase(status)) {
             throw new IllegalStateException("Cannot cancel reservation in status: " + status);
         }
 
-        r.setStatus("Cancelled");
+        r.setStatus("CANCELLED");
         repo.save(r);
     }
 
@@ -97,13 +152,14 @@ public class ReservationManager implements ReservationService {
     public void confirmReservation(Long reservationId) {
         Reservation r = repo.findById(reservationId)
                 .orElseThrow(() -> new IllegalArgumentException("Reservation not found: " + reservationId));
-        r.setStatus("Confirmed");
+        r.setStatus("CONFIRMED");
         repo.save(r);
     }
 
     @Override
     public void updateReservationStatus(Long reservationId, String status) {
-        if (status == null || status.isBlank()) throw new IllegalArgumentException("status required");
+        if (status == null || status.isBlank())
+            throw new IllegalArgumentException("status required");
         Reservation r = repo.findById(reservationId)
                 .orElseThrow(() -> new IllegalArgumentException("Reservation not found: " + reservationId));
         r.setStatus(status);
@@ -117,7 +173,13 @@ public class ReservationManager implements ReservationService {
 
     @Override
     public List<Reservation> getReservationsByGuest(Long guestId) {
-        return List.of();
+        List<Reservation> result = new ArrayList<>();
+        for (Reservation r : repo.findAll()) {
+            if (r.getGuest() != null && guestId.equals(r.getGuest().getGuestId())) {
+                result.add(r);
+            }
+        }
+        return result;
     }
 
     @Override
@@ -144,42 +206,54 @@ public class ReservationManager implements ReservationService {
 
     @Override
     public List<Reservation> getGuestReservationHistory(Long guestId) {
-        return List.of();
+        return getReservationsByGuest(guestId);
     }
 
     @Override
     public void assignRoom(Long reservationId, Long roomId) {
-        repo.findById(reservationId)
+        Reservation r = repo.findById(reservationId)
                 .orElseThrow(() -> new IllegalArgumentException("Reservation not found: " + reservationId));
-        if (roomId == null) throw new IllegalArgumentException("roomId required");
-        repo.assignRoom(reservationId, roomId);
+        if (roomId == null)
+            throw new IllegalArgumentException("roomId required");
+
+        Room room = roomService.getRoomById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("Room not found: " + roomId));
+        r.setAssignedRoom(room);
+        repo.save(r);
     }
 
     @Override
     public void reassignRoom(Long reservationId, Long newRoomId) {
-        if (newRoomId == null) throw new IllegalArgumentException("newRoomId required");
-        repo.findById(reservationId)
-                .orElseThrow(() -> new IllegalArgumentException("Reservation not found: " + reservationId));
-        repo.assignRoom(reservationId, newRoomId);
+        assignRoom(reservationId, newRoomId);
     }
 
     @Override
     public void unassignRoom(Long reservationId) {
-        repo.findById(reservationId)
+        Reservation r = repo.findById(reservationId)
                 .orElseThrow(() -> new IllegalArgumentException("Reservation not found: " + reservationId));
-        repo.unassignRoom(reservationId);
+        r.setAssignedRoom(null);
+        repo.save(r);
     }
 
     @Override
     public List<Long> searchAvailableRooms(LocalDate checkIn, LocalDate checkOut, Long roomTypeId, int occupancy) {
-        return List.of();
+        List<Long> result = new ArrayList<>();
+        List<Room> available = roomService.getAvailableRooms(checkIn, checkOut);
+        for (Room room : available) {
+            if (roomTypeId == null || room.getRoomType().getRoomTypeId().equals(roomTypeId)) {
+                if (room.getRoomType().getMaxOccupancy() >= occupancy) {
+                    result.add(room.getRoomId());
+                }
+            }
+        }
+        return result;
     }
 
     @Override
     public void markNoShow(Long reservationId) {
         Reservation r = repo.findById(reservationId)
                 .orElseThrow(() -> new IllegalArgumentException("Reservation not found: " + reservationId));
-        r.setStatus("No-Show");
+        r.setStatus("NO_SHOW");
         repo.save(r);
     }
 
@@ -188,7 +262,8 @@ public class ReservationManager implements ReservationService {
         LocalDate today = LocalDate.now();
         List<Reservation> out = new ArrayList<>();
         for (Reservation r : repo.findAll()) {
-            if (today.equals(r.getCheckInDate())) out.add(r);
+            if (today.equals(r.getCheckInDate()))
+                out.add(r);
         }
         return out;
     }
@@ -198,7 +273,8 @@ public class ReservationManager implements ReservationService {
         LocalDate today = LocalDate.now();
         List<Reservation> out = new ArrayList<>();
         for (Reservation r : repo.findAll()) {
-            if (today.equals(r.getCheckOutDate())) out.add(r);
+            if (today.equals(r.getCheckOutDate()))
+                out.add(r);
         }
         return out;
     }

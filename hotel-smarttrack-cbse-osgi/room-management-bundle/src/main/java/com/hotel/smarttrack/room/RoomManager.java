@@ -31,24 +31,23 @@ import com.hotel.smarttrack.service.RoomService;
  * It can activate independently.
  *
  */
-@Component(
-    service = RoomService.class,  // Register as RoomService interface
-    immediate = true               // Activate immediately when bundle starts
+@Component(service = RoomService.class, // Register as RoomService interface
+        immediate = true // Activate immediately when bundle starts
 )
 public class RoomManager implements RoomService {
 
-    // ============ Room Status Constants ============
-    
-    public static final String STATUS_AVAILABLE = "Available";
-    public static final String STATUS_OCCUPIED = "Occupied";
-    public static final String STATUS_UNDER_CLEANING = "Under Cleaning";
-    public static final String STATUS_OUT_OF_SERVICE = "Out of Service";
+    // ============ Room Status Constants (UPPERCASE) ============
+
+    public static final String STATUS_AVAILABLE = "AVAILABLE";
+    public static final String STATUS_OCCUPIED = "OCCUPIED";
+    public static final String STATUS_UNDER_CLEANING = "UNDER_CLEANING";
+    public static final String STATUS_OUT_OF_SERVICE = "OUT_OF_SERVICE";
 
     private static final List<String> VALID_STATUSES = Arrays.asList(
             STATUS_AVAILABLE, STATUS_OCCUPIED, STATUS_UNDER_CLEANING, STATUS_OUT_OF_SERVICE);
 
     // ============ In-Memory Repositories ============
-    
+
     private final RoomRepository roomRepository = new RoomRepository();
     private final RoomTypeRepository roomTypeRepository = new RoomTypeRepository();
 
@@ -98,13 +97,13 @@ public class RoomManager implements RoomService {
     private void loadSeedData() {
         // Create room types (these IDs must match SEED_DATA_SPEC.md)
         RoomType standard = roomTypeRepository.save(new RoomType(null, "Standard",
-            "Standard room with queen bed", 2, new BigDecimal("100.00"), new BigDecimal("0.10")));
-        
+                "Standard room with queen bed", 2, new BigDecimal("100.00"), new BigDecimal("0.10")));
+
         RoomType deluxe = roomTypeRepository.save(new RoomType(null, "Deluxe",
-            "Deluxe room with king bed and city view", 2, new BigDecimal("150.00"), new BigDecimal("0.10")));
-        
+                "Deluxe room with king bed and city view", 2, new BigDecimal("150.00"), new BigDecimal("0.10")));
+
         RoomType suite = roomTypeRepository.save(new RoomType(null, "Suite",
-            "Executive suite with separate living area", 4, new BigDecimal("250.00"), new BigDecimal("0.10")));
+                "Executive suite with separate living area", 4, new BigDecimal("250.00"), new BigDecimal("0.10")));
 
         // Create rooms (these IDs must match SEED_DATA_SPEC.md)
         roomRepository.save(new Room(null, "101", 1, standard, STATUS_AVAILABLE));
