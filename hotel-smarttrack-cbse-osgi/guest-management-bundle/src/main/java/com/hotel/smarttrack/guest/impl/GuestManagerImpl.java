@@ -1,4 +1,4 @@
-package com.hotel.smarttrack.guest;
+package com.hotel.smarttrack.guest.impl;
 
 import com.hotel.smarttrack.entity.Guest;
 import com.hotel.smarttrack.service.GuestService;
@@ -8,14 +8,14 @@ import java.util.List;
 import java.util.Optional;
 
 @Component(service = GuestService.class, immediate = true)
-public class GuestManager implements GuestService {
+public class GuestManagerImpl implements GuestService {
 
     private final GuestRepository repo = new GuestRepository();
 
     @Activate
     public void activate() {
         System.out.println("==============================================");
-        System.out.println("[GuestManager] Bundle ACTIVATED ✅");
+        System.out.println("[GuestManagerImpl] Bundle ACTIVATED ✅");
         System.out.println("  - Service Registered: GuestService");
         System.out.println("  - UC1  Manage Guest Records (CRUD)");
         System.out.println("  - UC2  Search Guest Profiles");
@@ -23,7 +23,7 @@ public class GuestManager implements GuestService {
         System.out.println("==============================================");
 
         loadSeedData();
-        System.out.println("[GuestManager] Loaded " + repo.findAll().size() + " guests");
+        System.out.println("[GuestManagerImpl] Loaded " + repo.findAll().size() + " guests");
     }
 
     private void loadSeedData() {
@@ -40,7 +40,7 @@ public class GuestManager implements GuestService {
 
     @Deactivate
     public void deactivate() {
-        System.out.println("[GuestManager] Deactivated");
+        System.out.println("[GuestManagerImpl] Deactivated");
     }
 
     // ================= UC1: CRUD =================
@@ -66,7 +66,6 @@ public class GuestManager implements GuestService {
             throw new IllegalArgumentException("Guest/guestId required");
         }
 
-        // 必须存在才允许 update（像 Reservation modify 那样）
         repo.findById(guest.getGuestId())
                 .orElseThrow(() -> new IllegalArgumentException("Guest not found: " + guest.getGuestId()));
 

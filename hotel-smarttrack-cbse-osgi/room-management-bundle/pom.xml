@@ -42,7 +42,7 @@
 Bundle-SymbolicName: ${project.artifactId}
 Bundle-Name: ${project.name}
 Bundle-Version: ${project.version}
-Private-Package: com.hotel.smarttrack.room
+Private-Package: com.hotel.smarttrack.room.impl
 Import-Package: \
     com.hotel.smarttrack.entity,\
     com.hotel.smarttrack.service,\

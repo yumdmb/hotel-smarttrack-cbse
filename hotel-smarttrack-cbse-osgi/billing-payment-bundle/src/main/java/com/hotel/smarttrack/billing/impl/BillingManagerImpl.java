@@ -1,4 +1,4 @@
-package com.hotel.smarttrack.billing;
+package com.hotel.smarttrack.billing.impl;
 
 import com.hotel.smarttrack.entity.Invoice;
 import com.hotel.smarttrack.entity.Payment;
@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Component(service = BillingService.class, immediate = true)
-public class BillingManager implements BillingService {
+public class BillingManagerImpl implements BillingService {
 
     private final InvoiceRepository repo = new InvoiceRepository();
 
@@ -27,7 +27,7 @@ public class BillingManager implements BillingService {
     @Activate
     public void activate() {
         System.out.println("==============================================");
-        System.out.println("[BillingManager] Bundle ACTIVATED ✅");
+        System.out.println("[BillingManagerImpl] Bundle ACTIVATED ✅");
         System.out.println("  - Service Registered: BillingService");
         System.out.println("  - StayService: " + (stayService != null ? "available" : "missing"));
         System.out.println("  - UC17 Generate Billing Documents (Invoice)");
@@ -37,41 +37,37 @@ public class BillingManager implements BillingService {
         System.out.println("==============================================");
 
         loadSeedData();
-        System.out.println("[BillingManager] Loaded " + repo.findAll().size() + " invoices");
+        System.out.println("[BillingManagerImpl] Loaded " + repo.findAll().size() + " invoices");
     }
 
     private void loadSeedData() {
         try {
-            // Get stay data per SEED_DATA_SPEC.md
-            Stay stay1 = stayService.getStayById(1L).orElseThrow(
+            stayService.getStayById(1L).orElseThrow(
                     () -> new RuntimeException("Stay ID 1 not found"));
 
-            // Calculate charges based on actual stay
             BigDecimal roomCharges = stayService.calculateRoomCharges(1L);
             BigDecimal incidentalCharges = stayService.getTotalIncidentalCharges(1L);
             BigDecimal subtotal = roomCharges.add(incidentalCharges);
             BigDecimal taxes = subtotal.multiply(new BigDecimal("0.10"));
             BigDecimal totalAmount = subtotal.add(taxes);
 
-            // Create invoice linked to Stay 1
             Invoice invoice = new Invoice(null, null, 1L, totalAmount, "Issued", LocalDateTime.now());
             repo.save(invoice);
 
         } catch (Exception e) {
-            System.out.println("[BillingManager] WARNING: Could not load seed data - " + e.getMessage());
+            System.out.println("[BillingManagerImpl] WARNING: Could not load seed data - " + e.getMessage());
         }
     }
 
     @Deactivate
     public void deactivate() {
-        System.out.println("[BillingManager] Bundle DEACTIVATED");
+        System.out.println("[BillingManagerImpl] Bundle DEACTIVATED");
     }
 
     // ===================== UC17 =====================
 
     @Override
     public Invoice generateInvoice(Long stayId) {
-        // Get stay data and calculate actual charges
         Stay stay = stayService.getStayById(stayId)
                 .orElseThrow(() -> new IllegalArgumentException("Stay not found: " + stayId));
 
@@ -103,7 +99,6 @@ public class BillingManager implements BillingService {
 
     @Override
     public List<Invoice> getInvoicesByGuest(Long guestId) {
-        // 你现在的 Invoice 实体里没有 guestId 字段，所以先返回空（保守）
         return List.of();
     }
 
@@ -114,7 +109,6 @@ public class BillingManager implements BillingService {
 
     @Override
     public Invoice regenerateInvoice(Long invoiceId) {
-        // 简化：重新计算 = 直接返回原 invoice
         return repo.findById(invoiceId)
                 .orElseThrow(() -> new IllegalArgumentException("Invoice not found: " + invoiceId));
     }
@@ -123,7 +117,6 @@ public class BillingManager implements BillingService {
 
     @Override
     public BigDecimal computeTotalCharges(Long stayId) {
-        // Demo：如果该 stay 有 invoice，用 invoice.amount 当 total
         Optional<Invoice> opt = repo.findByStayId(stayId);
         if (opt.isEmpty())
             return BigDecimal.ZERO;
@@ -133,7 +126,6 @@ public class BillingManager implements BillingService {
 
     @Override
     public BigDecimal computeRoomCharges(Long stayId) {
-        // Demo：先当成 total 的 100% 都是 room charge
         return computeTotalCharges(stayId);
     }
 
@@ -191,7 +183,6 @@ public class BillingManager implements BillingService {
 
     @Override
     public List<Invoice> getOverdueInvoices() {
-        // 你们 Invoice 里没有 dueDate，所以先返回空
         return List.of();
     }
 
@@ -200,21 +191,18 @@ public class BillingManager implements BillingService {
         repo.updateStatus(invoiceId, status);
     }
 
-    // ===================== Discounts / Reports（简化） =====================
+    // ===================== Discounts / Reports =====================
 
     @Override
     public void applyDiscount(Long invoiceId, BigDecimal discountAmount, String reason) {
-        // 你们 Invoice 没有 discount 字段，先不实现
     }
 
     @Override
     public void removeDiscount(Long invoiceId) {
-        // 先不实现
     }
 
     @Override
     public BigDecimal getTotalRevenue(String startDate, String endDate) {
-        // Demo：统计所有 PAID invoice 的 amount
         BigDecimal sum = BigDecimal.ZERO;
         for (Invoice inv : repo.findAll()) {
             if ("PAID".equalsIgnoreCase(inv.getStatus()) && inv.getAmount() != null) {

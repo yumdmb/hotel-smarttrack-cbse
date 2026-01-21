@@ -55,7 +55,7 @@ Import-Package: \
     com.hotel.smarttrack.service,\
     org.osgi.service.component.annotations;resolution:=optional
 
-Private-Package: com.hotel.smarttrack.billing
+Private-Package: com.hotel.smarttrack.billing.impl
 -dsannotations: *
                     ]]></bnd>
                 </configuration>

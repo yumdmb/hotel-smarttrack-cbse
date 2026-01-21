@@ -1,4 +1,4 @@
-package com.hotel.smarttrack.room;
+package com.hotel.smarttrack.room.impl;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -19,7 +19,7 @@ import com.hotel.smarttrack.entity.RoomType;
 import com.hotel.smarttrack.service.RoomService;
 
 /**
- * RoomManager - OSGi Declarative Services implementation of RoomService.
+ * RoomManagerImpl - OSGi Declarative Services implementation of RoomService.
  * Business logic for Room Management (UC5-UC8).
  * 
  * Key OSGi Annotations:
@@ -30,11 +30,10 @@ import com.hotel.smarttrack.service.RoomService;
  * Note: Room bundle has NO dependencies on other bundles!
  * It can activate independently.
  *
+ * @author Eisraq Rejab
  */
-@Component(service = RoomService.class, // Register as RoomService interface
-        immediate = true // Activate immediately when bundle starts
-)
-public class RoomManager implements RoomService {
+@Component(service = RoomService.class, immediate = true)
+public class RoomManagerImpl implements RoomService {
 
     // ============ Room Status Constants (UPPERCASE) ============
 
@@ -52,50 +51,25 @@ public class RoomManager implements RoomService {
     private final RoomTypeRepository roomTypeRepository = new RoomTypeRepository();
 
     // Mock reservation data for availability checking
-    // In production, this would query the Reservation service
-    // Map: roomId -> List of [checkIn, checkOut] date pairs
     private final Map<Long, List<LocalDate[]>> roomReservations = new HashMap<>();
 
     // ============ OSGi Lifecycle Methods ============
 
-    /**
-     * Called when the bundle is activated.
-     * Loads seed data according to SEED_DATA_SPEC.md
-     */
     @Activate
     public void activate() {
-        System.out.println("[RoomManager] Bundle ACTIVATING...");
+        System.out.println("[RoomManagerImpl] Bundle ACTIVATING...");
         loadSeedData();
-        System.out.println("[RoomManager] Loaded " + roomTypeRepository.count() + " room types");
-        System.out.println("[RoomManager] Loaded " + roomRepository.count() + " rooms");
-        System.out.println("[RoomManager] Bundle ACTIVATED ✓");
+        System.out.println("[RoomManagerImpl] Loaded " + roomTypeRepository.count() + " room types");
+        System.out.println("[RoomManagerImpl] Loaded " + roomRepository.count() + " rooms");
+        System.out.println("[RoomManagerImpl] Bundle ACTIVATED ✓");
     }
 
-    /**
-     * Called when the bundle is deactivated.
-     */
     @Deactivate
     public void deactivate() {
-        System.out.println("[RoomManager] Bundle DEACTIVATED");
+        System.out.println("[RoomManagerImpl] Bundle DEACTIVATED");
     }
 
-    /**
-     * Load seed data according to SEED_DATA_SPEC.md
-     * 
-     * Room Types:
-     * - ID 1: Standard (2 guests, $100)
-     * - ID 2: Deluxe (2 guests, $150)
-     * - ID 3: Suite (4 guests, $250)
-     * 
-     * Rooms:
-     * - ID 1: Room 101 (Floor 1, Standard)
-     * - ID 2: Room 102 (Floor 1, Standard)
-     * - ID 3: Room 201 (Floor 2, Deluxe)
-     * - ID 4: Room 202 (Floor 2, Deluxe)
-     * - ID 5: Room 301 (Floor 3, Suite)
-     */
     private void loadSeedData() {
-        // Create room types (these IDs must match SEED_DATA_SPEC.md)
         RoomType standard = roomTypeRepository.save(new RoomType(null, "Standard",
                 "Standard room with queen bed", 2, new BigDecimal("100.00"), new BigDecimal("0.10")));
 
@@ -105,7 +79,6 @@ public class RoomManager implements RoomService {
         RoomType suite = roomTypeRepository.save(new RoomType(null, "Suite",
                 "Executive suite with separate living area", 4, new BigDecimal("250.00"), new BigDecimal("0.10")));
 
-        // Create rooms (these IDs must match SEED_DATA_SPEC.md)
         roomRepository.save(new Room(null, "101", 1, standard, STATUS_AVAILABLE));
         roomRepository.save(new Room(null, "102", 1, standard, STATUS_AVAILABLE));
         roomRepository.save(new Room(null, "201", 2, deluxe, STATUS_AVAILABLE));
@@ -117,7 +90,6 @@ public class RoomManager implements RoomService {
 
     @Override
     public RoomType createRoomType(String typeName, String description, int maxOccupancy, BigDecimal basePrice) {
-        // Input validation
         if (typeName == null || typeName.trim().isEmpty()) {
             throw new IllegalArgumentException("Room type name cannot be null or empty");
         }
@@ -131,7 +103,6 @@ public class RoomManager implements RoomService {
             throw new IllegalArgumentException("Base price must be greater than 0");
         }
 
-        // Check for duplicate type name
         if (roomTypeRepository.existsByTypeNameIgnoreCase(typeName.trim())) {
             throw new IllegalArgumentException("Room type with name '" + typeName + "' already exists");
         }
@@ -141,10 +112,10 @@ public class RoomManager implements RoomService {
         roomType.setDescription(description.trim());
         roomType.setMaxOccupancy(maxOccupancy);
         roomType.setBasePrice(basePrice);
-        roomType.setTaxRate(BigDecimal.valueOf(0.10)); // Default 10% tax
+        roomType.setTaxRate(BigDecimal.valueOf(0.10));
 
         RoomType saved = roomTypeRepository.save(roomType);
-        System.out.println("[RoomManager] Created room type: " + typeName);
+        System.out.println("[RoomManagerImpl] Created room type: " + typeName);
         return saved;
     }
 
@@ -157,18 +128,17 @@ public class RoomManager implements RoomService {
             throw new IllegalArgumentException("Room type ID cannot be null");
         }
 
-        RoomType existing = roomTypeRepository.findById(roomType.getRoomTypeId())
+        roomTypeRepository.findById(roomType.getRoomTypeId())
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Room type with ID " + roomType.getRoomTypeId() + " not found"));
 
         RoomType saved = roomTypeRepository.save(roomType);
-        System.out.println("[RoomManager] Updated room type: " + roomType.getTypeName());
+        System.out.println("[RoomManagerImpl] Updated room type: " + roomType.getTypeName());
         return saved;
     }
 
     @Override
     public RoomType updateRoomPricing(Long roomTypeId, BigDecimal newPrice, BigDecimal newTaxRate) {
-        // Input validation
         if (roomTypeId == null) {
             throw new IllegalArgumentException("Room type ID cannot be null");
         }
@@ -189,7 +159,7 @@ public class RoomManager implements RoomService {
         }
 
         RoomType saved = roomTypeRepository.save(roomType);
-        System.out.println("[RoomManager] Updated pricing for: " + saved.getTypeName() +
+        System.out.println("[RoomManagerImpl] Updated pricing for: " + saved.getTypeName() +
                 " - New price: $" + newPrice + ", Tax: " +
                 saved.getTaxRate().multiply(new BigDecimal("100")) + "%");
         return saved;
@@ -214,7 +184,6 @@ public class RoomManager implements RoomService {
         RoomType roomType = roomTypeRepository.findById(roomTypeId)
                 .orElseThrow(() -> new IllegalArgumentException("Room type with ID " + roomTypeId + " not found"));
 
-        // Business rule: Can't delete if rooms exist with this type
         List<Room> roomsWithType = roomRepository.findByRoomTypeId(roomTypeId);
         if (!roomsWithType.isEmpty()) {
             throw new IllegalStateException("Cannot delete room type '" + roomType.getTypeName() +
@@ -222,14 +191,13 @@ public class RoomManager implements RoomService {
         }
 
         roomTypeRepository.delete(roomTypeId);
-        System.out.println("[RoomManager] Deleted room type: " + roomType.getTypeName());
+        System.out.println("[RoomManagerImpl] Deleted room type: " + roomType.getTypeName());
     }
 
     // ============ Room CRUD Operations ============
 
     @Override
     public Room createRoom(String roomNumber, int floorNumber, Long roomTypeId) {
-        // Input validation
         if (roomNumber == null || roomNumber.trim().isEmpty()) {
             throw new IllegalArgumentException("Room number cannot be null or empty");
         }
@@ -240,12 +208,10 @@ public class RoomManager implements RoomService {
             throw new IllegalArgumentException("Room type ID cannot be null");
         }
 
-        // Check for duplicate room number
         if (roomRepository.existsByRoomNumber(roomNumber.trim())) {
             throw new IllegalArgumentException("Room with number '" + roomNumber + "' already exists");
         }
 
-        // Validate room type exists
         RoomType roomType = roomTypeRepository.findById(roomTypeId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Room type with ID " + roomTypeId + " not found"));
@@ -257,14 +223,13 @@ public class RoomManager implements RoomService {
         room.setStatus(STATUS_AVAILABLE);
 
         Room saved = roomRepository.save(room);
-        System.out.println("[RoomManager] Created room: " + roomNumber +
+        System.out.println("[RoomManagerImpl] Created room: " + roomNumber +
                 " (Type: " + roomType.getTypeName() + ", Floor: " + floorNumber + ")");
         return saved;
     }
 
     @Override
     public Room updateRoom(Room room) {
-        // Input validation
         if (room == null) {
             throw new IllegalArgumentException("Room cannot be null");
         }
@@ -281,7 +246,6 @@ public class RoomManager implements RoomService {
         Room existing = roomRepository.findById(room.getRoomId())
                 .orElseThrow(() -> new IllegalArgumentException("Room with ID " + room.getRoomId() + " not found"));
 
-        // Check if room number is being changed and if new number already exists
         if (!existing.getRoomNumber().equals(room.getRoomNumber())) {
             if (roomRepository.existsByRoomNumber(room.getRoomNumber())) {
                 throw new IllegalArgumentException("Room number '" + room.getRoomNumber() + "' is already in use");
@@ -289,7 +253,7 @@ public class RoomManager implements RoomService {
         }
 
         Room saved = roomRepository.save(room);
-        System.out.println("[RoomManager] Updated room: " + room.getRoomNumber());
+        System.out.println("[RoomManagerImpl] Updated room: " + room.getRoomNumber());
         return saved;
     }
 
@@ -326,7 +290,6 @@ public class RoomManager implements RoomService {
 
     @Override
     public void deleteRoom(Long roomId) {
-        // Input validation
         if (roomId == null) {
             throw new IllegalArgumentException("Room ID cannot be null");
         }
@@ -334,14 +297,13 @@ public class RoomManager implements RoomService {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("Room with ID " + roomId + " not found"));
 
-        // Business rule: Can't delete occupied rooms
         if (STATUS_OCCUPIED.equals(room.getStatus())) {
             throw new IllegalStateException("Cannot delete room " + room.getRoomNumber() +
                     " - room is currently occupied");
         }
 
         roomRepository.delete(roomId);
-        System.out.println("[RoomManager] Deleted room: " + room.getRoomNumber() +
+        System.out.println("[RoomManagerImpl] Deleted room: " + room.getRoomNumber() +
                 " (ID: " + roomId + ")");
     }
 
@@ -349,7 +311,6 @@ public class RoomManager implements RoomService {
 
     @Override
     public void updateRoomStatus(Long roomId, String status) {
-        // Input validation
         if (roomId == null) {
             throw new IllegalArgumentException("Room ID cannot be null");
         }
@@ -357,7 +318,6 @@ public class RoomManager implements RoomService {
             throw new IllegalArgumentException("Room status cannot be null or empty");
         }
 
-        // Validate status
         if (!VALID_STATUSES.contains(status)) {
             throw new IllegalArgumentException("Invalid room status: " + status +
                     ". Valid statuses are: " + String.join(", ", VALID_STATUSES));
@@ -370,7 +330,7 @@ public class RoomManager implements RoomService {
         room.setStatus(status);
         roomRepository.save(room);
 
-        System.out.println("[RoomManager] Updated room " + room.getRoomNumber() +
+        System.out.println("[RoomManagerImpl] Updated room " + room.getRoomNumber() +
                 " status from '" + oldStatus + "' to '" + status + "'");
     }
 
@@ -386,10 +346,8 @@ public class RoomManager implements RoomService {
 
     @Override
     public List<Room> getAvailableRooms(LocalDate checkIn, LocalDate checkOut) {
-        // Date range validation
         validateDateRange(checkIn, checkOut);
 
-        // Filter rooms using enhanced availability checking
         return roomRepository.findAllAvailable().stream()
                 .filter(room -> isRoomAvailableInternal(room, checkIn, checkOut))
                 .collect(Collectors.toList());
@@ -397,15 +355,12 @@ public class RoomManager implements RoomService {
 
     @Override
     public List<Room> getAvailableRoomsByType(Long roomTypeId, LocalDate checkIn, LocalDate checkOut) {
-        // Input validation
         if (roomTypeId == null) {
             throw new IllegalArgumentException("Room type ID cannot be null");
         }
 
-        // Date range validation
         validateDateRange(checkIn, checkOut);
 
-        // Filter by room type and availability
         return roomRepository.findByRoomTypeId(roomTypeId).stream()
                 .filter(room -> isRoomAvailableInternal(room, checkIn, checkOut))
                 .collect(Collectors.toList());
@@ -427,43 +382,30 @@ public class RoomManager implements RoomService {
 
     // ============ Helper Methods ============
 
-    /**
-     * Check if a room is available for a specific date range.
-     */
     private boolean isRoomAvailableInternal(Room room, LocalDate checkIn, LocalDate checkOut) {
-        // First check the room status - only Available rooms can be booked
         if (!STATUS_AVAILABLE.equals(room.getStatus())) {
             return false;
         }
 
-        // Check against existing reservations
         List<LocalDate[]> reservations = roomReservations.getOrDefault(room.getRoomId(), new ArrayList<>());
 
         for (LocalDate[] reserved : reservations) {
             LocalDate reservedStart = reserved[0];
             LocalDate reservedEnd = reserved[1];
 
-            // Check if date ranges overlap
             if (!checkOut.isBefore(reservedStart) && !reservedEnd.isBefore(checkIn)) {
-                return false; // Conflict found
+                return false;
             }
         }
 
         return true;
     }
 
-    /**
-     * Block a room for a specific date range (simulating a reservation).
-     * In production, this would be handled by the Reservation service.
-     */
     public void blockRoomDates(Long roomId, LocalDate checkIn, LocalDate checkOut) {
         roomReservations.computeIfAbsent(roomId, k -> new ArrayList<>())
                 .add(new LocalDate[] { checkIn, checkOut });
     }
 
-    /**
-     * Validates date range for room availability checks.
-     */
     private void validateDateRange(LocalDate checkIn, LocalDate checkOut) {
         if (checkIn == null) {
             throw new IllegalArgumentException("Check-in date cannot be null");

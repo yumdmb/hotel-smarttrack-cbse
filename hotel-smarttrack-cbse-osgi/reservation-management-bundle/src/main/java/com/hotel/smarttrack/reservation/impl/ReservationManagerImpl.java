@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Component(service = ReservationService.class, immediate = true)
-public class ReservationManager implements ReservationService {
+public class ReservationManagerImpl implements ReservationService {
 
     private final ReservationRepository repo = new ReservationRepository();
 
@@ -30,7 +30,7 @@ public class ReservationManager implements ReservationService {
     @Activate
     public void activate() {
         System.out.println("==============================================");
-        System.out.println("[ReservationManager] Bundle ACTIVATED ✅");
+        System.out.println("[ReservationManagerImpl] Bundle ACTIVATED ✅");
         System.out.println("  - Service Registered: ReservationService");
         System.out.println("  - GuestService: " + (guestService != null ? "available" : "missing"));
         System.out.println("  - RoomService: " + (roomService != null ? "available" : "missing"));
@@ -41,12 +41,11 @@ public class ReservationManager implements ReservationService {
         System.out.println("==============================================");
 
         loadSeedData();
-        System.out.println("[ReservationManager] Loaded " + repo.findAll().size() + " reservations");
+        System.out.println("[ReservationManagerImpl] Loaded " + repo.findAll().size() + " reservations");
     }
 
     private void loadSeedData() {
         try {
-            // Get data from other services per SEED_DATA_SPEC.md
             Guest john = guestService.getGuestById(1L).orElseThrow(
                     () -> new RuntimeException("Guest ID 1 not found"));
             Guest jane = guestService.getGuestById(2L).orElseThrow(
@@ -60,26 +59,24 @@ public class ReservationManager implements ReservationService {
             Room room101 = roomService.getRoomById(1L).orElseThrow(
                     () -> new RuntimeException("Room ID 1 not found"));
 
-            // Reservation 1: John Doe, Deluxe Room 201
             Reservation r1 = new Reservation(null, john, deluxe, room201,
                     LocalDate.of(2026, 1, 25), LocalDate.of(2026, 1, 27),
                     2, "CONFIRMED", "Late check-in requested");
             repo.save(r1);
 
-            // Reservation 2: Jane Smith, Standard Room 101
             Reservation r2 = new Reservation(null, jane, standard, room101,
                     LocalDate.of(2026, 1, 26), LocalDate.of(2026, 1, 28),
                     1, "CONFIRMED", null);
             repo.save(r2);
 
         } catch (Exception e) {
-            System.out.println("[ReservationManager] WARNING: Could not load seed data - " + e.getMessage());
+            System.out.println("[ReservationManagerImpl] WARNING: Could not load seed data - " + e.getMessage());
         }
     }
 
     @Deactivate
     public void deactivate() {
-        System.out.println("[ReservationManager] Deactivated");
+        System.out.println("[ReservationManagerImpl] Deactivated");
     }
 
     @Override
@@ -92,7 +89,6 @@ public class ReservationManager implements ReservationService {
         if (numberOfGuests <= 0)
             throw new IllegalArgumentException("numberOfGuests must be > 0");
 
-        // Get guest and room type from services
         Guest guest = guestService.getGuestById(guestId)
                 .orElseThrow(() -> new IllegalArgumentException("Guest not found: " + guestId));
         RoomType roomType = roomService.getRoomTypeById(roomTypeId)

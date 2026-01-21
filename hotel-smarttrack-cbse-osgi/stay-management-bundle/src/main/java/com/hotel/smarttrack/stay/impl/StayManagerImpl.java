@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * StayManager - OSGi Declarative Services implementation of StayService.
+ * StayManagerImpl - OSGi Declarative Services implementation of StayService.
  * 
  * Handles UC13-UC16:
  * - UC13: Check-In Guest
@@ -22,7 +22,7 @@ import java.util.Optional;
  * @author Elvis Sawing
  */
 @Component(service = StayService.class, immediate = true)
-public class StayManager implements StayService {
+public class StayManagerImpl implements StayService {
 
     // Status constants
     private static final String STATUS_CHECKED_IN = "CHECKED_IN";
@@ -53,13 +53,13 @@ public class StayManager implements StayService {
 
     @Activate
     public void activate() {
-        System.out.println("[StayManager] Activating and loading seed data...");
+        System.out.println("[StayManagerImpl] Activating and loading seed data...");
         loadSeedData();
     }
 
     @Deactivate
     public void deactivate() {
-        System.out.println("[StayManager] Bundle DEACTIVATED");
+        System.out.println("[StayManagerImpl] Bundle DEACTIVATED");
     }
 
     private void loadSeedData() {

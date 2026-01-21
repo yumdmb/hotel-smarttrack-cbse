@@ -1,4 +1,4 @@
-package com.hotel.smarttrack.billing;
+package com.hotel.smarttrack.billing.impl;
 
 import com.hotel.smarttrack.entity.Invoice;
 import com.hotel.smarttrack.entity.Payment;
@@ -13,16 +13,15 @@ public class InvoiceRepository {
 
     private final Map<Long, Invoice> invoices = new ConcurrentHashMap<>();
 
-    // invoiceId -> payments
     private final Map<Long, List<Payment>> paymentsByInvoice = new ConcurrentHashMap<>();
-    // paymentId -> payment
     private final Map<Long, Payment> paymentsById = new ConcurrentHashMap<>();
 
     private final AtomicLong invoiceIdGen = new AtomicLong(1);
     private final AtomicLong paymentIdGen = new AtomicLong(1);
 
     public Invoice save(Invoice invoice) {
-        if (invoice == null) throw new IllegalArgumentException("Invoice is null");
+        if (invoice == null)
+            throw new IllegalArgumentException("Invoice is null");
 
         if (invoice.getInvoiceId() == null) {
             invoice.setInvoiceId(invoiceIdGen.getAndIncrement());
@@ -32,7 +31,8 @@ public class InvoiceRepository {
     }
 
     public Optional<Invoice> findById(Long id) {
-        if (id == null) return Optional.empty();
+        if (id == null)
+            return Optional.empty();
         return Optional.ofNullable(invoices.get(id));
     }
 
@@ -41,7 +41,8 @@ public class InvoiceRepository {
     }
 
     public Optional<Invoice> findByStayId(Long stayId) {
-        if (stayId == null) return Optional.empty();
+        if (stayId == null)
+            return Optional.empty();
         for (Invoice i : invoices.values()) {
             if (Objects.equals(i.getStayId(), stayId)) {
                 return Optional.of(i);
@@ -51,7 +52,8 @@ public class InvoiceRepository {
     }
 
     public Optional<Invoice> findByReservationId(Long reservationId) {
-        if (reservationId == null) return Optional.empty();
+        if (reservationId == null)
+            return Optional.empty();
         for (Invoice i : invoices.values()) {
             if (Objects.equals(i.getReservationId(), reservationId)) {
                 return Optional.of(i);
@@ -61,7 +63,8 @@ public class InvoiceRepository {
     }
 
     public List<Invoice> findByStatus(String status) {
-        if (status == null) return List.of();
+        if (status == null)
+            return List.of();
         List<Invoice> result = new ArrayList<>();
         for (Invoice i : invoices.values()) {
             if (i.getStatus() != null && status.equalsIgnoreCase(i.getStatus())) {
@@ -73,7 +76,8 @@ public class InvoiceRepository {
 
     public void updateStatus(Long invoiceId, String status) {
         Invoice inv = invoices.get(invoiceId);
-        if (inv == null) throw new IllegalArgumentException("Invoice not found: " + invoiceId);
+        if (inv == null)
+            throw new IllegalArgumentException("Invoice not found: " + invoiceId);
         inv.setStatus(status);
         save(inv);
     }
@@ -82,7 +86,8 @@ public class InvoiceRepository {
 
     public Payment addPayment(Long invoiceId, BigDecimal amount, String method, String txRef) {
         Invoice inv = invoices.get(invoiceId);
-        if (inv == null) throw new IllegalArgumentException("Invoice not found: " + invoiceId);
+        if (inv == null)
+            throw new IllegalArgumentException("Invoice not found: " + invoiceId);
 
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Invalid payment amount");
@@ -107,7 +112,6 @@ public class InvoiceRepository {
         paymentsById.put(pid, p);
         paymentsByInvoice.computeIfAbsent(invoiceId, k -> new ArrayList<>()).add(p);
 
-        // update invoice status
         BigDecimal total = inv.getAmount() == null ? BigDecimal.ZERO : inv.getAmount();
         BigDecimal paid = getPaidAmount(invoiceId);
 
@@ -128,16 +132,17 @@ public class InvoiceRepository {
     }
 
     public Optional<Payment> getPaymentById(Long paymentId) {
-        if (paymentId == null) return Optional.empty();
+        if (paymentId == null)
+            return Optional.empty();
         return Optional.ofNullable(paymentsById.get(paymentId));
     }
 
     public void refundPayment(Long paymentId) {
         Payment p = paymentsById.get(paymentId);
-        if (p == null) throw new IllegalArgumentException("Payment not found: " + paymentId);
+        if (p == null)
+            throw new IllegalArgumentException("Payment not found: " + paymentId);
         p.setStatus("REFUNDED");
 
-        // 退款后也更新 invoice 状态（保守处理）
         Long invoiceId = p.getInvoiceId();
         if (invoiceId != null && invoices.containsKey(invoiceId)) {
             Invoice inv = invoices.get(invoiceId);
@@ -170,7 +175,8 @@ public class InvoiceRepository {
 
     public BigDecimal getOutstandingBalance(Long invoiceId) {
         Invoice inv = invoices.get(invoiceId);
-        if (inv == null) throw new IllegalArgumentException("Invoice not found: " + invoiceId);
+        if (inv == null)
+            throw new IllegalArgumentException("Invoice not found: " + invoiceId);
 
         BigDecimal amount = inv.getAmount() == null ? BigDecimal.ZERO : inv.getAmount();
         BigDecimal paid = getPaidAmount(invoiceId);
