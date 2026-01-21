@@ -25,7 +25,7 @@ public class BillingConsoleMenu {
 
     public void showMenu() {
         if (billingService == null) {
-            input.println("\n⚠ Billing Service is not available.");
+            input.println("\n[!] Billing Service is not available.");
             input.println("Make sure the billing-payment-bundle is installed and started.");
             return;
         }
@@ -56,9 +56,9 @@ public class BillingConsoleMenu {
                     default -> input.println("Invalid option.");
                 }
             } catch (IllegalArgumentException ex) {
-                input.println("❌ Error: " + ex.getMessage());
+                input.println("[ERROR] Error: " + ex.getMessage());
             } catch (Exception ex) {
-                input.println("❌ Unexpected error: " + ex.getMessage());
+                input.println("[ERROR] Unexpected error: " + ex.getMessage());
             }
         }
     }
@@ -113,7 +113,7 @@ public class BillingConsoleMenu {
         Long invoiceId = input.readLong("Invoice ID: ");
         billingService.getInvoiceById(invoiceId).ifPresentOrElse(
             this::printInvoiceDetails,
-            () -> input.println("❌ Invoice not found.")
+            () -> input.println("[ERROR] Invoice not found.")
         );
     }
 

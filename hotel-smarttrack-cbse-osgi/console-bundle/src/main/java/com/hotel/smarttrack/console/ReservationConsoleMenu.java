@@ -63,9 +63,9 @@ public class ReservationConsoleMenu {
                     default -> input.println("Invalid option.");
                 }
             } catch (IllegalArgumentException | IllegalStateException ex) {
-                input.println("❌ Error: " + ex.getMessage());
+                input.println("[ERROR] Error: " + ex.getMessage());
             } catch (Exception ex) {
-                input.println("❌ Unexpected error: " + ex.getMessage());
+                input.println("[ERROR] Unexpected error: " + ex.getMessage());
             }
         }
     }

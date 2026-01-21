@@ -100,10 +100,10 @@ public class HotelConsoleCommand {
                         printGoodbyeBanner(input);
                         running = false;
                     }
-                    default -> input.println("\n⚠ Invalid choice. Please enter a number from 0-5.");
+                    default -> input.println("\n[!] Invalid choice. Please enter a number from 0-5.");
                 }
             } catch (Exception e) {
-                input.println("\n❌ Error: " + e.getMessage());
+                input.println("\n[ERROR] Error: " + e.getMessage());
             }
         }
     }
@@ -140,10 +140,10 @@ public class HotelConsoleCommand {
                         printGoodbyeBanner(input);
                         running = false;
                     }
-                    default -> input.println("\n⚠ Invalid choice. Please enter a number from 0-5.");
+                    default -> input.println("\n[!] Invalid choice. Please enter a number from 0-5.");
                 }
             } catch (Exception e) {
-                input.println("\n❌ Error: " + e.getMessage());
+                input.println("\n[ERROR] Error: " + e.getMessage());
             }
         }
     }
@@ -152,31 +152,32 @@ public class HotelConsoleCommand {
 
     private void printWelcomeBanner(ConsoleInputHelper input) {
         input.println("\n");
-        input.println("╔══════════════════════════════════════════════════════════════╗");
-        input.println("║            HOTEL SMARTTRACK MANAGEMENT SYSTEM                ║");
-        input.println("║               OSGi Component-Based Architecture              ║");
-        input.println("╚══════════════════════════════════════════════════════════════╝");
+        input.println("+================================================================+");
+        input.println("|            HOTEL SMARTTRACK MANAGEMENT SYSTEM                 |");
+        input.println("|               OSGi Component-Based Architecture               |");
+        input.println("+================================================================+");
     }
 
     private void printMainMenu(ConsoleInputHelper input) {
-        input.println("\n╔══════════════════════════════════════════════════════════════╗");
-        input.println("║                      MAIN MENU                               ║");
-        input.println("╠══════════════════════════════════════════════════════════════╣");
-        input.println("║                                                              ║");
-        input.println("║   1. Guest Management          (Ma Wenting)                  ║");
-        input.println("║   2. Room Management           (Eisraq Rejab)                ║");
-        input.println("║   3. Reservation Management    (Li Yuhang)                   ║");
-        input.println("║   4. Stay Management           (Elvis Sawing)                ║");
-        input.println("║   5. Billing & Payment         (Huang Di)                    ║");
-        input.println("║                                                              ║");
-        input.println("║   0. Exit Console                                            ║");
-        input.println("╚══════════════════════════════════════════════════════════════╝");
+        input.println("\n+================================================================+");
+        input.println("|                        MAIN MENU                              |");
+        input.println("+----------------------------------------------------------------+");
+        input.println("|                                                               |");
+        input.println("|   1. Guest Management          (Ma Wenting)                   |");
+        input.println("|   2. Room Management           (Eisraq Rejab)                 |");
+        input.println("|   3. Reservation Management    (Li Yuhang)                    |");
+        input.println("|   4. Stay Management           (Elvis Sawing)                 |");
+        input.println("|   5. Billing & Payment         (Huang Di)                     |");
+        input.println("|                                                               |");
+        input.println("|   0. Exit Console                                             |");
+        input.println("+================================================================+");
     }
 
     private void printGoodbyeBanner(ConsoleInputHelper input) {
         input.println("\n");
-        input.println("╔══════════════════════════════════════════════════════════════╗");
-        input.println("║     Thank you for using Hotel SmartTrack. Goodbye!           ║");
-        input.println("╚══════════════════════════════════════════════════════════════╝");
+        input.println("+================================================================+");
+        input.println("|     Thank you for using Hotel SmartTrack. Goodbye!            |");
+        input.println("+================================================================+");
     }
 }
+

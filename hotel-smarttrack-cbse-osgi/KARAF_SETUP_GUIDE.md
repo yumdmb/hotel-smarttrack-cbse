@@ -1,6 +1,6 @@
 # Karaf Setup Guide (For Teammates)
 
-This guide explains how to set up and run the Hotel SmartTrack OSGi project using the provided Karaf folder.
+This guide explains how to set up and run the Hotel SmartTrack OSGi project using Apache Karaf.
 
 ---
 
@@ -29,114 +29,132 @@ hotel-smarttrack-cbse-osgi/
 
 ---
 
-## Step 2: Build the Project
+## Steps 2-4: Build, Start & Run
 
-Open PowerShell/Terminal and run:
+### 2. Build the Project
 
 ```powershell
 cd hotel-smarttrack-cbse-osgi
 mvn clean install -DskipTests
 ```
 
-Wait for `BUILD SUCCESS`.
-
----
-
-## Step 3: Start Karaf
+### 3. Start Karaf
 
 ```powershell
 cd karaf
 bin\karaf.bat
 ```
 
-You should see the Karaf welcome screen.
+### 4. Install & Run (Single Command!)
 
----
-
-## Step 4: Install SCR Feature
-
-In the Karaf console, run:
+In the Karaf console, copy and paste:
 
 ```
-feature:install scr
-```
-
----
-
-## Step 5: Install Bundles
-
-Copy and paste this entire block:
-
-```bash
-bundle:install -s file:../common-bundle/target/common-bundle-1.0-SNAPSHOT.jar
-bundle:install -s file:../guest-management-bundle/target/guest-management-bundle-1.0-SNAPSHOT.jar
-bundle:install -s file:../room-management-bundle/target/room-management-bundle-1.0-SNAPSHOT.jar
-bundle:install -s file:../reservation-management-bundle/target/reservation-management-bundle-1.0-SNAPSHOT.jar
-bundle:install -s file:../stay-management-bundle/target/stay-management-bundle-1.0-SNAPSHOT.jar
-bundle:install -s file:../billing-payment-bundle/target/billing-payment-bundle-1.0-SNAPSHOT.jar
-bundle:install -s file:../console-bundle/target/console-bundle-1.0-SNAPSHOT.jar
-```
-
----
-
-## Step 6: Verify Installation
-
-```
-bundle:list
-```
-
-All Hotel SmartTrack bundles should show `Active` status.
-
----
-
-## Step 7: Run the Console
-
-```
+feature:repo-add file:../src/main/feature/hotel-smarttrack-features.xml
+feature:install hotel-smarttrack
 hotel:console
 ```
 
-You should see the Hotel SmartTrack main menu!
+**That's it!** 🎉 You should see the Hotel SmartTrack main menu.
 
 ---
 
 ## Quick Reference
 
-| Command           | Description         |
-| ----------------- | ------------------- |
-| `bundle:list`     | List all bundles    |
-| `scr:list`        | List SCR components |
-| `log:tail`        | View logs           |
-| `system:shutdown` | Stop Karaf          |
+| Command           | Description                        |
+| ----------------- | ---------------------------------- |
+| `hotel:console`   | Start the Hotel SmartTrack console |
+| `bundle:list`     | List all bundles                   |
+| `scr:list`        | List SCR components                |
+| `log:tail`        | View logs                          |
+| `feature:list`    | List installed features            |
+| `system:shutdown` | Stop Karaf                         |
 
 ---
 
 ## Troubleshooting
 
-### Reset Karaf (Start Fresh)
+### Reset Everything (Start Fresh)
 
 ```powershell
-# Stop Karaf first (Ctrl+C or 'logout')
+# Stop Karaf first (Ctrl+D or 'logout')
 Remove-Item -Recurse -Force karaf\data
 bin\karaf.bat
+# Then re-run the install commands from Step 3
 ```
 
 ### Bundle Not Starting
 
 ```
 bundle:diag <bundle-id>
+scr:list
 ```
 
 ### After Code Changes
 
-Rebuild and update the bundle:
-
 ```powershell
 # In another terminal:
-mvn install -DskipTests -pl console-bundle
+mvn install -DskipTests
+
+# In Karaf console:
+feature:uninstall hotel-smarttrack
+feature:install hotel-smarttrack
 ```
 
-Then in Karaf:
+---
+
+## Alternative: Manual Bundle Installation
+
+If you prefer to install bundles one by one instead of using the feature file:
+
+### 1. Start Karaf
+
+```powershell
+cd karaf
+bin\karaf.bat
+```
+
+### 2. Install SCR Feature
 
 ```
-bundle:update <bundle-id> file:../console-bundle/target/console-bundle-1.0-SNAPSHOT.jar
+feature:install scr
+```
+
+### 3. Install Bundles (in order)
+
+Copy and paste each command one by one:
+
+```bash
+bundle:install -s file:../common-bundle/target/common-bundle-1.0-SNAPSHOT.jar
+```
+
+```bash
+bundle:install -s file:../guest-management-bundle/target/guest-management-bundle-1.0-SNAPSHOT.jar
+```
+
+```bash
+bundle:install -s file:../room-management-bundle/target/room-management-bundle-1.0-SNAPSHOT.jar
+```
+
+```bash
+bundle:install -s file:../reservation-management-bundle/target/reservation-management-bundle-1.0-SNAPSHOT.jar
+```
+
+```bash
+bundle:install -s file:../stay-management-bundle/target/stay-management-bundle-1.0-SNAPSHOT.jar
+```
+
+```bash
+bundle:install -s file:../billing-payment-bundle/target/billing-payment-bundle-1.0-SNAPSHOT.jar
+```
+
+```bash
+bundle:install -s file:../console-bundle/target/console-bundle-1.0-SNAPSHOT.jar
+```
+
+### 4. Verify & Run
+
+```
+bundle:list
+hotel:console
 ```
