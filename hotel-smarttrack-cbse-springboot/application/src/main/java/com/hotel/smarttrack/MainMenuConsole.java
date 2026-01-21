@@ -59,7 +59,7 @@ public class MainMenuConsole implements CommandLineRunner {
                 case "0" -> {
                     System.out.println("\n");
                     System.out.println("╔══════════════════════════════════════════════════════════════╗");
-                    System.out.println("║     Thank you for using Hotel SmartTrack. Goodbye!          ║");
+                    System.out.println("║     Thank you for using Hotel SmartTrack. Goodbye!           ║");
                     System.out.println("╚══════════════════════════════════════════════════════════════╝");
                     running = false;
                 }
