@@ -32,6 +32,7 @@
         <module>reservation-management-bundle</module>
         <module>stay-management-bundle</module>
         <module>billing-payment-bundle</module>
+        <module>console-bundle</module>
     </modules>
 
     <dependencyManagement>
