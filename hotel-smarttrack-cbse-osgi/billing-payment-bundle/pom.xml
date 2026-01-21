@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
-    
+
     <parent>
         <groupId>com.hotel.smarttrack.osgi</groupId>
         <artifactId>hotel-smarttrack-cbse-osgi</artifactId>
@@ -12,20 +14,25 @@
 
     <artifactId>billing-payment-bundle</artifactId>
     <packaging>jar</packaging>
-    
-    <name>Hotel SmartTrack - Billing and Payment Bundle</name>
-    <description>Billing and Payment component with BillingManager implementation</description>
+
+    <name>Hotel SmartTrack - Billing &amp; Payment Bundle</name>
+    <description>Billing/Invoice Management OSGi Bundle</description>
 
     <dependencies>
+        <!-- Common bundle for entities and interfaces -->
         <dependency>
             <groupId>com.hotel.smarttrack.osgi</groupId>
             <artifactId>common-bundle</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <!-- OSGi Core API -->
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>osgi.core</artifactId>
         </dependency>
+
+        <!-- OSGi DS Annotations -->
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.component.annotations</artifactId>
@@ -42,15 +49,18 @@
 Bundle-SymbolicName: ${project.artifactId}
 Bundle-Name: ${project.name}
 Bundle-Version: ${project.version}
-Private-Package: com.hotel.smarttrack.billing.impl
+
 Import-Package: \
     com.hotel.smarttrack.entity,\
     com.hotel.smarttrack.service,\
-    *
+    org.osgi.service.component.annotations;resolution:=optional
+
+Private-Package: com.hotel.smarttrack.billing
 -dsannotations: *
                     ]]></bnd>
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
