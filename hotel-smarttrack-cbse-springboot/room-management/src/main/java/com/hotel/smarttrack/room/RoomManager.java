@@ -39,15 +39,14 @@ import jakarta.annotation.PostConstruct;
 public class RoomManager implements RoomService {
 
     // ============ Room Status Constants ============
-    
+
     public static final String STATUS_AVAILABLE = "Available";
     public static final String STATUS_OCCUPIED = "Occupied";
     public static final String STATUS_UNDER_CLEANING = "Under Cleaning";
     public static final String STATUS_OUT_OF_SERVICE = "Out of Service";
-    
+
     private static final List<String> VALID_STATUSES = Arrays.asList(
-        STATUS_AVAILABLE, STATUS_OCCUPIED, STATUS_UNDER_CLEANING, STATUS_OUT_OF_SERVICE
-    );
+            STATUS_AVAILABLE, STATUS_OCCUPIED, STATUS_UNDER_CLEANING, STATUS_OUT_OF_SERVICE);
 
     private final RoomRepository roomRepository;
     private final RoomTypeRepository roomTypeRepository;
@@ -145,6 +144,12 @@ public class RoomManager implements RoomService {
     @Transactional(readOnly = true)
     public List<RoomType> getAllRoomTypes() {
         return roomTypeRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<RoomType> getRoomTypeById(Long roomTypeId) {
+        return roomTypeRepository.findById(roomTypeId);
     }
 
     // ============ Room CRUD Operations ============
@@ -268,8 +273,8 @@ public class RoomManager implements RoomService {
 
         // Validate status
         if (!VALID_STATUSES.contains(status)) {
-            throw new IllegalArgumentException("Invalid room status: " + status + 
-                ". Valid statuses are: " + String.join(", ", VALID_STATUSES));
+            throw new IllegalArgumentException("Invalid room status: " + status +
+                    ". Valid statuses are: " + String.join(", ", VALID_STATUSES));
         }
 
         Room room = roomRepository.findById(roomId)
@@ -284,7 +289,7 @@ public class RoomManager implements RoomService {
     }
 
     // ============ Room Availability Operations ============
-    
+
     /**
      * Check if a room is available for a specific date range.
      */
@@ -300,7 +305,7 @@ public class RoomManager implements RoomService {
         for (LocalDate[] reserved : reservations) {
             LocalDate reservedStart = reserved[0];
             LocalDate reservedEnd = reserved[1];
-            
+
             // Check if date ranges overlap
             if (!checkOut.isBefore(reservedStart) && !reservedEnd.isBefore(checkIn)) {
                 return false; // Conflict found
@@ -309,14 +314,14 @@ public class RoomManager implements RoomService {
 
         return true;
     }
-    
+
     /**
      * Block a room for a specific date range (simulating a reservation).
      * In production, this would be handled by the Reservation service.
      */
     public void blockRoomDates(Long roomId, LocalDate checkIn, LocalDate checkOut) {
         roomReservations.computeIfAbsent(roomId, k -> new ArrayList<>())
-                .add(new LocalDate[]{checkIn, checkOut});
+                .add(new LocalDate[] { checkIn, checkOut });
     }
 
     @Override

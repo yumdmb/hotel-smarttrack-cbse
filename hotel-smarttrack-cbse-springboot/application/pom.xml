@@ -2,8 +2,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
-    
+
     <parent>
         <groupId>com.hotel.smarttrack</groupId>
         <artifactId>hotel-smarttrack-cbse-springboot</artifactId>
@@ -12,7 +13,7 @@
 
     <artifactId>application</artifactId>
     <packaging>jar</packaging>
-    
+
     <name>Hotel SmartTrack - Application</name>
     <description>Main Spring Boot Application that assembles all components</description>
 
@@ -23,86 +24,62 @@
     </properties>
 
     <dependencies>
-        <!-- =================================================================
-             REQUIRED: Common module (entities, services, repositories)
-             This is the only REQUIRED dependency. All entities are here.
-             ================================================================= -->
+        <!-- Component modules -->
         <dependency>
             <groupId>com.hotel.smarttrack</groupId>
             <artifactId>common</artifactId>
             <version>${project.version}</version>
         </dependency>
-        
-        <!-- =================================================================
-             OPTIONAL: Feature modules
-             ================================================================= 
-             HOW TO ADD YOUR MODULE:
-             1. Develop your module in its own branch (e.g., elvis-stay)
-             2. When ready to integrate, uncomment your module below
-             3. Run: mvn clean compile to verify integration
-             4. Commit your pom.xml change
-             
-             Spring Boot will auto-detect all @Component, @Service, @Repository
-             classes from any module on the classpath!
-             ================================================================= -->
-        
-        <!-- Room Management (Eisraq) -->
+
         <dependency>
             <groupId>com.hotel.smarttrack</groupId>
             <artifactId>room-management</artifactId>
             <version>${project.version}</version>
         </dependency>
-        
-        <!-- Guest Management - Uncomment when ready
+
         <dependency>
             <groupId>com.hotel.smarttrack</groupId>
             <artifactId>guest-management</artifactId>
             <version>${project.version}</version>
         </dependency>
-        -->
-        
-        <!-- Reservation Management - Uncomment when ready
+
         <dependency>
             <groupId>com.hotel.smarttrack</groupId>
             <artifactId>reservation-management</artifactId>
             <version>${project.version}</version>
         </dependency>
-        -->
-        
-        <!-- Stay Management (Elvis) -->
+
         <dependency>
             <groupId>com.hotel.smarttrack</groupId>
             <artifactId>stay-management</artifactId>
             <version>${project.version}</version>
         </dependency>
-        
-        <!-- Billing & Payment (Huang Di) -->
+
         <dependency>
             <groupId>com.hotel.smarttrack</groupId>
             <artifactId>billing-payment</artifactId>
             <version>${project.version}</version>
         </dependency>
-        
-        <!-- =================================================================
-             Spring Boot Starters
-             ================================================================= -->
+
+        <!-- Spring Boot -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-        
-        <!-- H2 In-Memory Database -->
+
+        <!-- H2 -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>runtime</scope>
         </dependency>
-        
-        <!-- Testing -->
+
+        <!-- Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -116,7 +93,6 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <skip>false</skip>
                     <mainClass>com.hotel.smarttrack.HotelSmarttrackApplication</mainClass>
                 </configuration>
             </plugin>
