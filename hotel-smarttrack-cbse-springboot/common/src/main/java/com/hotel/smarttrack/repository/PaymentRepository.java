@@ -1,4 +1,4 @@
-package com.hotel.smarttrack.billing;
+package com.hotel.smarttrack.repository;
 
 import com.hotel.smarttrack.entity.Payment;
 import org.springframework.data.jpa.repository.JpaRepository;
