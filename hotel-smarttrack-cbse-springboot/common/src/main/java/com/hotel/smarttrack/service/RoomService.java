@@ -31,6 +31,11 @@ public interface RoomService {
      */
     List<RoomType> getAllRoomTypes();
 
+    /**
+     * Get room type by ID.
+     */
+    Optional<RoomType> getRoomTypeById(Long roomTypeId);
+
     // ============ Room Operations ============
 
     /**

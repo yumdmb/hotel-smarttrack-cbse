@@ -14,7 +14,7 @@
     <packaging>jar</packaging>
     
     <name>Hotel SmartTrack - Common Bundle</name>
-    <description>Base library containing entity classes and service interfaces</description>
+    <description>Base library containing entity classes and service interfaces for OSGi bundles</description>
 
     <dependencies>
         <!-- OSGi Core API -->
@@ -41,11 +41,22 @@
 Bundle-SymbolicName: ${project.artifactId}
 Bundle-Name: ${project.name}
 Bundle-Version: ${project.version}
+Bundle-Description: ${project.description}
+Bundle-Vendor: Hotel SmartTrack Team
+
+# Export entity and service packages for other bundles to use
 Export-Package: \
-    com.hotel.smarttrack.entity,\
-    com.hotel.smarttrack.service
--sources: true
+    com.hotel.smarttrack.entity;version="${project.version}",\
+    com.hotel.smarttrack.service;version="${project.version}"
+
+# No private packages - this is a shared library
+# No implementation classes here
+
+# Include OSGi DS annotations processing
 -dsannotations: *
+
+# Include sources for debugging
+-sources: true
                     ]]></bnd>
                 </configuration>
             </plugin>
@@ -54,6 +65,12 @@ Export-Package: \
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
+            </plugin>
+            
+            <!-- Compiler plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
             </plugin>
         </plugins>
     </build>
