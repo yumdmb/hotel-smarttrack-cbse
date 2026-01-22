@@ -43,3 +43,10 @@ build/
 # Apache Felix distribution
 felix/
 felix.zip
+
+# Apache Karaf distribution
+karaf/
+karaf.zip
+apache-karaf-*/
+apache-karaf-*.zip
+OSGI_LECTURE_NOTES.md

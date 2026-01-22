@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Hotel SmartTrack Karaf Feature Repository
+    
+    This file defines all bundles as a single deployable feature.
+    Usage:
+      1. feature:repo-add file:../src/main/feature/hotel-smarttrack-features.xml
+      2. feature:install hotel-smarttrack
+-->
+<features name="hotel-smarttrack-repo" xmlns="http://karaf.apache.org/xmlns/features/v1.4.0">
+
+    <!-- Main Hotel SmartTrack Feature -->
+    <feature name="hotel-smarttrack" version="1.0.0" description="Hotel SmartTrack Management System">
+        
+        <!-- Required Karaf Features -->
+        <feature>scr</feature>
+        
+        <!-- Common Bundle (must be first - provides shared interfaces) -->
+        <bundle start-level="80">file:../common-bundle/target/common-bundle-1.0-SNAPSHOT.jar</bundle>
+        
+        <!-- Domain Bundles (order matters for dependencies) -->
+        <bundle start-level="81">file:../guest-management-bundle/target/guest-management-bundle-1.0-SNAPSHOT.jar</bundle>
+        <bundle start-level="81">file:../room-management-bundle/target/room-management-bundle-1.0-SNAPSHOT.jar</bundle>
+        <bundle start-level="82">file:../reservation-management-bundle/target/reservation-management-bundle-1.0-SNAPSHOT.jar</bundle>
+        <bundle start-level="83">file:../stay-management-bundle/target/stay-management-bundle-1.0-SNAPSHOT.jar</bundle>
+        <bundle start-level="84">file:../billing-payment-bundle/target/billing-payment-bundle-1.0-SNAPSHOT.jar</bundle>
+        
+        <!-- Console Bundle (last - depends on all services) -->
+        <bundle start-level="85">file:../console-bundle/target/console-bundle-1.0-SNAPSHOT.jar</bundle>
+        
+    </feature>
+
+</features>

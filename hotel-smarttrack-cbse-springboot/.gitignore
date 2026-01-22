@@ -38,3 +38,6 @@ build/
 *.trace.db
 /data/
 .env
+
+SPRING_BOOT_LECTURE_NOTES.md
+SPRING_COMPONENT_LECTURE_NOTES.md

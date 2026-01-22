@@ -1,4 +1,4 @@
-package com.hotel.smarttrack.stay;
+package com.hotel.smarttrack.stay.console;
 
 import com.hotel.smarttrack.entity.IncidentalCharge;
 import com.hotel.smarttrack.entity.Stay;

@@ -1,4 +1,4 @@
-package com.hotel.smarttrack.room;
+package com.hotel.smarttrack.room.console;
 
 import com.hotel.smarttrack.entity.Room;
 import com.hotel.smarttrack.entity.RoomType;
@@ -100,7 +100,7 @@ public class RoomManagementConsole {
 
     private void createRoom() {
         System.out.println("\n▸ CREATE NEW ROOM");
-        
+
         try {
             System.out.print("Room Number: ");
             String roomNumber = scanner.nextLine().trim();
@@ -117,8 +117,8 @@ public class RoomManagementConsole {
 
             System.out.println("\nAvailable Room Types:");
             for (RoomType rt : roomTypes) {
-                System.out.printf("  %d. %s - $%.2f/night\n", 
-                    rt.getRoomTypeId(), rt.getTypeName(), rt.getBasePrice());
+                System.out.printf("  %d. %s - $%.2f/night\n",
+                        rt.getRoomTypeId(), rt.getTypeName(), rt.getBasePrice());
             }
 
             System.out.print("Select Room Type ID: ");
@@ -126,8 +126,8 @@ public class RoomManagementConsole {
 
             Room room = roomService.createRoom(roomNumber, floorNumber, roomTypeId);
             System.out.println("✓ Room created successfully!");
-            System.out.printf("  Room #%s, Floor %d, Type: %s\n", 
-                room.getRoomNumber(), room.getFloorNumber(), room.getRoomType().getTypeName());
+            System.out.printf("  Room #%s, Floor %d, Type: %s\n",
+                    room.getRoomNumber(), room.getFloorNumber(), room.getRoomType().getTypeName());
 
         } catch (NumberFormatException e) {
             System.out.println("⚠ Error: Invalid number format.");
@@ -148,13 +148,13 @@ public class RoomManagementConsole {
         System.out.println("\n┌──────┬────────┬─────────────────┬───────────────────┐");
         System.out.println("│ Room │ Floor  │ Type            │ Status            │");
         System.out.println("├──────┼────────┼─────────────────┼───────────────────┤");
-        
+
         for (Room room : rooms) {
             System.out.printf("│ %-4s │ %-6d │ %-15s │ %-17s │\n",
-                room.getRoomNumber(),
-                room.getFloorNumber(),
-                room.getRoomType().getTypeName(),
-                room.getStatus());
+                    room.getRoomNumber(),
+                    room.getFloorNumber(),
+                    room.getRoomType().getTypeName(),
+                    room.getStatus());
         }
         System.out.println("└──────┴────────┴─────────────────┴───────────────────┘");
     }
@@ -257,7 +257,7 @@ public class RoomManagementConsole {
 
     private void createRoomType() {
         System.out.println("\n▸ CREATE ROOM TYPE");
-        
+
         try {
             System.out.print("Type Name (e.g., Standard, Deluxe, Suite): ");
             String typeName = scanner.nextLine().trim();
@@ -273,8 +273,8 @@ public class RoomManagementConsole {
 
             RoomType roomType = roomService.createRoomType(typeName, description, maxOccupancy, basePrice);
             System.out.println("✓ Room type created successfully!");
-            System.out.printf("  ID: %d, %s - $%.2f/night\n", 
-                roomType.getRoomTypeId(), roomType.getTypeName(), roomType.getBasePrice());
+            System.out.printf("  ID: %d, %s - $%.2f/night\n",
+                    roomType.getRoomTypeId(), roomType.getTypeName(), roomType.getBasePrice());
 
         } catch (Exception e) {
             System.out.println("⚠ Error: " + e.getMessage());
@@ -293,13 +293,13 @@ public class RoomManagementConsole {
         System.out.println("\n┌────┬─────────────────┬──────────────┬────────────┐");
         System.out.println("│ ID │ Type Name       │ Max Occupancy│ Base Price │");
         System.out.println("├────┼─────────────────┼──────────────┼────────────┤");
-        
+
         for (RoomType type : types) {
             System.out.printf("│ %-2d │ %-15s │ %-12d │ $%-9.2f │\n",
-                type.getRoomTypeId(),
-                type.getTypeName(),
-                type.getMaxOccupancy(),
-                type.getBasePrice());
+                    type.getRoomTypeId(),
+                    type.getTypeName(),
+                    type.getMaxOccupancy(),
+                    type.getBasePrice());
         }
         System.out.println("└────┴─────────────────┴──────────────┴────────────┘");
     }
@@ -352,7 +352,7 @@ public class RoomManagementConsole {
 
     private void manageRoomPricing() {
         System.out.println("\n▸ MANAGE ROOM PRICING");
-        
+
         List<RoomType> types = roomService.getAllRoomTypes();
         if (types.isEmpty()) {
             System.out.println("  No room types available.");
@@ -362,8 +362,8 @@ public class RoomManagementConsole {
         System.out.println("\nRoom Types:");
         for (RoomType type : types) {
             System.out.printf("  %d. %s - $%.2f/night (Tax: %.1f%%)\n",
-                type.getRoomTypeId(), type.getTypeName(), 
-                type.getBasePrice(), type.getTaxRate().multiply(BigDecimal.valueOf(100)));
+                    type.getRoomTypeId(), type.getTypeName(),
+                    type.getBasePrice(), type.getTaxRate().multiply(BigDecimal.valueOf(100)));
         }
 
         try {
@@ -379,8 +379,8 @@ public class RoomManagementConsole {
             RoomType updated = roomService.updateRoomPricing(roomTypeId, newPrice, newTaxRate);
             System.out.println("✓ Pricing updated successfully!");
             System.out.printf("  %s: $%.2f/night (Tax: %.1f%%)\n",
-                updated.getTypeName(), updated.getBasePrice(), 
-                updated.getTaxRate().multiply(BigDecimal.valueOf(100)));
+                    updated.getTypeName(), updated.getBasePrice(),
+                    updated.getTaxRate().multiply(BigDecimal.valueOf(100)));
 
         } catch (Exception e) {
             System.out.println("⚠ Error: " + e.getMessage());
@@ -391,7 +391,7 @@ public class RoomManagementConsole {
 
     private void displayRoomAvailability() {
         System.out.println("\n▸ ROOM AVAILABILITY");
-        
+
         try {
             System.out.print("Check-in Date (yyyy-MM-dd): ");
             String checkInStr = scanner.nextLine().trim();
@@ -420,10 +420,10 @@ public class RoomManagementConsole {
 
             for (Room room : availableRooms) {
                 System.out.printf("│ %-4s │ %-6d │ %-15s │ $%-9.2f │\n",
-                    room.getRoomNumber(),
-                    room.getFloorNumber(),
-                    room.getRoomType().getTypeName(),
-                    room.getRoomType().getBasePrice());
+                        room.getRoomNumber(),
+                        room.getFloorNumber(),
+                        room.getRoomType().getTypeName(),
+                        room.getRoomType().getBasePrice());
             }
             System.out.println("└──────┴────────┴─────────────────┴────────────┘");
 

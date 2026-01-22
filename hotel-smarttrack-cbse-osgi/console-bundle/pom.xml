@@ -3,32 +3,43 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    
+
     <parent>
         <groupId>com.hotel.smarttrack.osgi</groupId>
         <artifactId>hotel-smarttrack-cbse-osgi</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>room-management-bundle</artifactId>
+    <artifactId>console-bundle</artifactId>
     <packaging>jar</packaging>
-    
-    <name>Hotel SmartTrack - Room Management Bundle</name>
-    <description>Room Management component with RoomManager implementation</description>
+
+    <name>Hotel SmartTrack - Console Bundle</name>
+    <description>Interactive Terminal UI for Hotel SmartTrack OSGi</description>
 
     <dependencies>
+        <!-- Common bundle for entities and interfaces -->
         <dependency>
             <groupId>com.hotel.smarttrack.osgi</groupId>
             <artifactId>common-bundle</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <!-- OSGi Core API -->
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>osgi.core</artifactId>
         </dependency>
+
+        <!-- OSGi DS Annotations -->
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.component.annotations</artifactId>
+        </dependency>
+        
+        <!-- Karaf Shell API (for proper console input) -->
+        <dependency>
+            <groupId>org.apache.karaf.shell</groupId>
+            <artifactId>org.apache.karaf.shell.core</artifactId>
         </dependency>
     </dependencies>
 
@@ -42,21 +53,23 @@
 Bundle-SymbolicName: ${project.artifactId}
 Bundle-Name: ${project.name}
 Bundle-Version: ${project.version}
-Private-Package: com.hotel.smarttrack.room.impl
 Import-Package: \
     com.hotel.smarttrack.entity,\
     com.hotel.smarttrack.service,\
-    org.osgi.service.component.annotations;resolution:=optional,\
-    *
+    org.apache.karaf.shell.api.action;resolution:=optional,\
+    org.apache.karaf.shell.api.action.lifecycle;resolution:=optional,\
+    org.apache.karaf.shell.api.console;resolution:=optional,\
+    org.osgi.service.component.annotations;resolution:=optional
+Private-Package: com.hotel.smarttrack.console
 -dsannotations: *
                     ]]></bnd>
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
             </plugin>
         </plugins>
     </build>
-
 </project>

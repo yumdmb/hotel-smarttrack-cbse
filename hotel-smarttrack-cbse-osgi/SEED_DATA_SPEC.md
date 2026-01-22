@@ -75,10 +75,10 @@ OSGi DS (Declarative Services) handles this automatically! If `@Reference` servi
 
 | ID  | Name        | Email                 | Phone       | ID Number | Status   |
 | --- | ----------- | --------------------- | ----------- | --------- | -------- |
-| 1   | John Doe    | john.doe@email.com    | +1-555-0101 | ID001     | Active   |
-| 2   | Jane Smith  | jane.smith@email.com  | +1-555-0102 | ID002     | Active   |
-| 3   | Bob Wilson  | bob.wilson@email.com  | +1-555-0103 | ID003     | Active   |
-| 4   | Alice Brown | alice.brown@email.com | +1-555-0104 | ID004     | Inactive |
+| 1   | John Doe    | john.doe@email.com    | +1-555-0101 | ID001     | ACTIVE   |
+| 2   | Jane Smith  | jane.smith@email.com  | +1-555-0102 | ID002     | ACTIVE   |
+| 3   | Bob Wilson  | bob.wilson@email.com  | +1-555-0103 | ID003     | ACTIVE   |
+| 4   | Alice Brown | alice.brown@email.com | +1-555-0104 | ID004     | INACTIVE |
 
 ### Code Template
 
@@ -91,13 +91,13 @@ public void activate() {
 
 private void loadSeedData() {
     guestRepository.save(new Guest(null, "John Doe", "john.doe@email.com",
-        "+1-555-0101", "ID001", "Active", null));
+        "+1-555-0101", "ID001", "ACTIVE", null));
     guestRepository.save(new Guest(null, "Jane Smith", "jane.smith@email.com",
-        "+1-555-0102", "ID002", "Active", null));
+        "+1-555-0102", "ID002", "ACTIVE", null));
     guestRepository.save(new Guest(null, "Bob Wilson", "bob.wilson@email.com",
-        "+1-555-0103", "ID003", "Active", null));
+        "+1-555-0103", "ID003", "ACTIVE", null));
     guestRepository.save(new Guest(null, "Alice Brown", "alice.brown@email.com",
-        "+1-555-0104", "ID004", "Inactive", "Account suspended"));
+        "+1-555-0104", "ID004", "INACTIVE", "Account suspended"));
 
     System.out.println("[GuestManager] Loaded " + guestRepository.findAll().size() + " guests");
 }
@@ -121,11 +121,11 @@ private void loadSeedData() {
 
 | ID  | Room Number | Floor | Type ID | Status    |
 | --- | ----------- | ----- | ------- | --------- |
-| 1   | 101         | 1     | 1       | Available |
-| 2   | 102         | 1     | 1       | Available |
-| 3   | 201         | 2     | 2       | Available |
-| 4   | 202         | 2     | 2       | Available |
-| 5   | 301         | 3     | 3       | Available |
+| 1   | 101         | 1     | 1       | AVAILABLE |
+| 2   | 102         | 1     | 1       | AVAILABLE |
+| 3   | 201         | 2     | 2       | AVAILABLE |
+| 4   | 202         | 2     | 2       | AVAILABLE |
+| 5   | 301         | 3     | 3       | AVAILABLE |
 
 ### Code Template
 
@@ -146,11 +146,11 @@ private void loadSeedData() {
         "Executive suite with separate living area", 4, new BigDecimal("250.00"), new BigDecimal("0.10")));
 
     // Create rooms
-    roomRepository.save(new Room(null, "101", 1, standard, "Available"));
-    roomRepository.save(new Room(null, "102", 1, standard, "Available"));
-    roomRepository.save(new Room(null, "201", 2, deluxe, "Available"));
-    roomRepository.save(new Room(null, "202", 2, deluxe, "Available"));
-    roomRepository.save(new Room(null, "301", 3, suite, "Available"));
+    roomRepository.save(new Room(null, "101", 1, standard, "AVAILABLE"));
+    roomRepository.save(new Room(null, "102", 1, standard, "AVAILABLE"));
+    roomRepository.save(new Room(null, "201", 2, deluxe, "AVAILABLE"));
+    roomRepository.save(new Room(null, "202", 2, deluxe, "AVAILABLE"));
+    roomRepository.save(new Room(null, "301", 3, suite, "AVAILABLE"));
 
     System.out.println("[RoomManager] Loaded " + roomTypeRepository.findAll().size() + " room types");
     System.out.println("[RoomManager] Loaded " + roomRepository.findAll().size() + " rooms");
@@ -169,8 +169,8 @@ private void loadSeedData() {
 
 | ID  | Guest ID | Room Type ID | Room ID | Check-In   | Check-Out  | Guests | Status    |
 | --- | -------- | ------------ | ------- | ---------- | ---------- | ------ | --------- |
-| 1   | 1 (John) | 2 (Deluxe)   | 3 (201) | 2026-01-25 | 2026-01-27 | 2      | Confirmed |
-| 2   | 2 (Jane) | 1 (Standard) | 1 (101) | 2026-01-26 | 2026-01-28 | 1      | Confirmed |
+| 1   | 1 (John) | 2 (Deluxe)   | 3 (201) | 2026-01-25 | 2026-01-27 | 2      | CONFIRMED |
+| 2   | 2 (Jane) | 1 (Standard) | 1 (101) | 2026-01-26 | 2026-01-28 | 1      | CONFIRMED |
 
 ### Code Template
 
@@ -200,9 +200,9 @@ private void loadSeedData() {
 
     // Create reservations
     reservationRepository.save(new Reservation(null, john, deluxe, room201,
-        LocalDate.of(2026, 1, 25), LocalDate.of(2026, 1, 27), 2, "Confirmed", "Late check-in requested"));
+        LocalDate.of(2026, 1, 25), LocalDate.of(2026, 1, 27), 2, "CONFIRMED", "Late check-in requested"));
     reservationRepository.save(new Reservation(null, jane, standard, room101,
-        LocalDate.of(2026, 1, 26), LocalDate.of(2026, 1, 28), 1, "Confirmed", null));
+        LocalDate.of(2026, 1, 26), LocalDate.of(2026, 1, 28), 1, "CONFIRMED", null));
 
     System.out.println("[ReservationManager] Loaded " + reservationRepository.findAll().size() + " reservations");
 }
@@ -277,7 +277,7 @@ private void loadSeedData() {
 
 | ID  | Stay ID | Total Amount | Amount Paid | Status |
 | --- | ------- | ------------ | ----------- | ------ |
-| 1   | 1       | 457.50       | 0.00        | Issued |
+| 1   | 1       | 457.50       | 0.00        | UNPAID |
 
 **Note:** Invoice will auto-calculate based on Stay 1:
 
@@ -288,12 +288,14 @@ private void loadSeedData() {
 
 ### Code Template
 
+> **Note:** The Invoice entity uses a simplified structure for basic payment tracking.
+> Fields: `invoiceId`, `reservationId`, `stayId`, `amount`, `status`, `issuedAt`
+
 ```java
 @Reference
 private volatile StayService stayService;
 
 private final InvoiceRepository invoiceRepository = new InvoiceRepository();
-private final PaymentRepository paymentRepository = new PaymentRepository();
 
 @Activate
 public void activate() {
@@ -302,20 +304,16 @@ public void activate() {
 }
 
 private void loadSeedData() {
-    // Get stay data
+    // Get stay data and calculate total
     Stay stay1 = stayService.getStayById(1L).orElseThrow();
+    BigDecimal totalAmount = calculateTotalCharges(1L); // Uses StayService for charges
 
-    // Calculate charges
-    BigDecimal roomCharges = new BigDecimal("300.00"); // 2 nights × $150
-    BigDecimal incidentalCharges = new BigDecimal("57.50");
-    BigDecimal subtotal = roomCharges.add(incidentalCharges);
-    BigDecimal taxes = subtotal.multiply(new BigDecimal("0.10"));
-    BigDecimal totalAmount = subtotal.add(taxes);
-
-    // Create invoice
-    Invoice invoice = new Invoice(null, stay1, stay1.getGuest(), roomCharges, incidentalCharges,
-        taxes, BigDecimal.ZERO, totalAmount, BigDecimal.ZERO, totalAmount,
-        new ArrayList<>(), "Issued", LocalDateTime.now(), null);
+    // Create invoice with simplified structure
+    Invoice invoice = new Invoice();
+    invoice.setStayId(1L);
+    invoice.setAmount(totalAmount);
+    invoice.setStatus("UNPAID");
+    invoice.setIssuedAt(LocalDateTime.now());
     invoiceRepository.save(invoice);
 
     System.out.println("[BillingManager] Loaded " + invoiceRepository.findAll().size() + " invoices");

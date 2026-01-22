@@ -1,10 +1,11 @@
 package com.hotel.smarttrack;
 
 import com.hotel.smarttrack.billing.console.BillingConsole;
-import com.hotel.smarttrack.guest.GuestManagementConsole;
+import com.hotel.smarttrack.guest.console.GuestManagementConsole;
 import com.hotel.smarttrack.reservation.console.ReservationConsole;
-import com.hotel.smarttrack.room.RoomManagementConsole;
-import com.hotel.smarttrack.stay.StayManagementConsole;
+import com.hotel.smarttrack.room.console.RoomManagementConsole;
+import com.hotel.smarttrack.stay.console.StayManagementConsole;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -59,7 +60,7 @@ public class MainMenuConsole implements CommandLineRunner {
                 case "0" -> {
                     System.out.println("\n");
                     System.out.println("╔══════════════════════════════════════════════════════════════╗");
-                    System.out.println("║     Thank you for using Hotel SmartTrack. Goodbye!          ║");
+                    System.out.println("║     Thank you for using Hotel SmartTrack. Goodbye!           ║");
                     System.out.println("╚══════════════════════════════════════════════════════════════╝");
                     running = false;
                 }
