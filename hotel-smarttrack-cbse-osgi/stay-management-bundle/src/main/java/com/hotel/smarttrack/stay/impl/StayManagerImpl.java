@@ -4,6 +4,7 @@ import com.hotel.smarttrack.entity.*;
 import com.hotel.smarttrack.service.*;
 import org.osgi.service.component.annotations.*;
 
+import javax.sql.DataSource;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -12,6 +13,7 @@ import java.util.Optional;
 
 /**
  * StayManagerImpl - OSGi Declarative Services implementation of StayService.
+ * Uses JDBC-based repositories with DataSource from Karaf's pax-jdbc.
  * 
  * Handles UC13-UC16:
  * - UC13: Check-In Guest
@@ -19,7 +21,7 @@ import java.util.Optional;
  * - UC15: Record Incidental Charges
  * - UC16: Check-Out Guest
  * 
- * @author Elvis Sawing
+ * @author Elvis Sawing (refactored for JDBC)
  */
 @Component(service = StayService.class, immediate = true)
 public class StayManagerImpl implements StayService {
@@ -31,9 +33,13 @@ public class StayManagerImpl implements StayService {
     private static final String ROOM_AVAILABLE = "AVAILABLE";
     private static final String ROOM_CLEANING = "UNDER_CLEANING";
 
-    // In-memory repositories
-    private final StayRepository stayRepository = new StayRepository();
-    private final IncidentalChargeRepository chargeRepository = new IncidentalChargeRepository();
+    // ============ DataSource and Repositories ============
+
+    @Reference(target = "(osgi.jndi.service.name=jdbc/hoteldb)")
+    private DataSource dataSource;
+
+    private StayRepository stayRepository;
+    private IncidentalChargeRepository chargeRepository;
 
     // ============ OSGi Service References ============
 
@@ -53,45 +59,27 @@ public class StayManagerImpl implements StayService {
 
     @Activate
     public void activate() {
-        System.out.println("[StayManagerImpl] Activating and loading seed data...");
-        loadSeedData();
+        System.out.println("==============================================");
+        System.out.println("[StayManagerImpl] Bundle ACTIVATED ✅");
+        System.out.println("  - Service Registered: StayService");
+        System.out.println("  - Using H2 Database via JDBC DataSource");
+        System.out.println("  - GuestService: " + (guestService != null ? "available" : "missing"));
+        System.out.println("  - RoomService: " + (roomService != null ? "available" : "missing"));
+        System.out.println("  - ReservationService: " + (reservationService != null ? "available" : "missing"));
+        System.out.println("  - BillingService: " + (billingService != null ? "available" : "not yet"));
+        System.out.println("==============================================");
+
+        // Initialize repositories with DataSource
+        this.stayRepository = new StayRepository(dataSource, guestService, roomService, reservationService);
+        this.chargeRepository = new IncidentalChargeRepository(dataSource, stayRepository);
+
+        System.out.println("[StayManagerImpl] Found " + stayRepository.count() + " stays in database");
+        System.out.println("[StayManagerImpl] Found " + chargeRepository.count() + " incidental charges in database");
     }
 
     @Deactivate
     public void deactivate() {
         System.out.println("[StayManagerImpl] Bundle DEACTIVATED");
-    }
-
-    private void loadSeedData() {
-        try {
-            // Get data from other services (per SEED_DATA_SPEC.md)
-            Guest john = guestService.getGuestById(1L).orElseThrow(
-                    () -> new RuntimeException("Guest ID 1 not found - ensure guest-management-bundle is active"));
-            Room room201 = roomService.getRoomById(3L).orElseThrow(
-                    () -> new RuntimeException("Room ID 3 not found - ensure room-management-bundle is active"));
-            Reservation reservation1 = reservationService.getReservationById(1L).orElseThrow(
-                    () -> new RuntimeException(
-                            "Reservation ID 1 not found - ensure reservation-management-bundle is active"));
-
-            // Create active stay (ID=1, per SEED_DATA_SPEC.md)
-            Stay stay1 = new Stay(null, reservation1, john, room201,
-                    LocalDateTime.of(2026, 1, 25, 14, 0), null, STATUS_CHECKED_IN, "KC001");
-            Stay savedStay = stayRepository.save(stay1);
-
-            // Add incidental charges (per SEED_DATA_SPEC.md)
-            chargeRepository.save(new IncidentalCharge(null, savedStay, "Minibar",
-                    "2x Soda, 1x Chips", new BigDecimal("12.50"),
-                    LocalDateTime.of(2026, 1, 25, 20, 30)));
-            chargeRepository.save(new IncidentalCharge(null, savedStay, "Room Service",
-                    "Dinner - Steak with salad", new BigDecimal("45.00"),
-                    LocalDateTime.of(2026, 1, 25, 19, 0)));
-
-            System.out.println("[StayManager] Loaded " + stayRepository.count() + " stays");
-            System.out.println("[StayManager] Loaded " + chargeRepository.count() + " incidental charges");
-        } catch (Exception e) {
-            System.out.println("[StayManager] WARNING: Could not load seed data - " + e.getMessage());
-            System.out.println("[StayManager] This may be expected if dependent bundles are not yet active");
-        }
     }
 
     // ============ UC13: Check-In Operations ============

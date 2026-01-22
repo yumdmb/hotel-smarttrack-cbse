@@ -2,10 +2,13 @@ Bundle-Name: Hotel SmartTrack Guest Management Bundle
 Bundle-SymbolicName: com.hotel.smarttrack.guest
 Bundle-Version: 1.0.0
 
-Private-Package: \
- com.hotel.smarttrack.guest
+Private-Package: com.hotel.smarttrack.guest.impl
 
 Import-Package: \
- com.hotel.smarttrack.service, \
- com.hotel.smarttrack.entity, \
- org.osgi.framework
+    com.hotel.smarttrack.service, \
+    com.hotel.smarttrack.entity, \
+    javax.sql, \
+    *
+
+# Enable Declarative Services annotation processing
+-dsannotations: *

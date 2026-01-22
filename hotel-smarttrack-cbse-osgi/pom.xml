@@ -29,6 +29,7 @@
 
     <!-- Sub-modules to be added as you create them -->
     <modules>
+        <module>datasource-bundle</module>
         <module>common-bundle</module>
         <module>guest-management-bundle</module>
         <module>room-management-bundle</module>

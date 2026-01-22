@@ -3,16 +3,19 @@ package com.hotel.smarttrack.room.impl;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+
+import javax.sql.DataSource;
 
 import com.hotel.smarttrack.entity.Room;
 import com.hotel.smarttrack.entity.RoomType;
@@ -22,15 +25,9 @@ import com.hotel.smarttrack.service.RoomService;
  * RoomManagerImpl - OSGi Declarative Services implementation of RoomService.
  * Business logic for Room Management (UC5-UC8).
  * 
- * Key OSGi Annotations:
- * - @Component: Registers this as an OSGi DS component
- * - @Activate: Called when bundle starts
- * - @Deactivate: Called when bundle stops
- * 
- * Note: Room bundle has NO dependencies on other bundles!
- * It can activate independently.
+ * Uses JDBC-based repositories with DataSource from Karaf's pax-jdbc.
  *
- * @author Eisraq Rejab
+ * @author Eisraq Rejab (refactored for JDBC)
  */
 @Component(service = RoomService.class, immediate = true)
 public class RoomManagerImpl implements RoomService {
@@ -45,10 +42,13 @@ public class RoomManagerImpl implements RoomService {
     private static final List<String> VALID_STATUSES = Arrays.asList(
             STATUS_AVAILABLE, STATUS_OCCUPIED, STATUS_UNDER_CLEANING, STATUS_OUT_OF_SERVICE);
 
-    // ============ In-Memory Repositories ============
+    // ============ DataSource and Repositories ============
 
-    private final RoomRepository roomRepository = new RoomRepository();
-    private final RoomTypeRepository roomTypeRepository = new RoomTypeRepository();
+    @Reference(target = "(osgi.jndi.service.name=jdbc/hoteldb)")
+    private DataSource dataSource;
+
+    private RoomRepository roomRepository;
+    private RoomTypeRepository roomTypeRepository;
 
     // Mock reservation data for availability checking
     private final Map<Long, List<LocalDate[]>> roomReservations = new HashMap<>();
@@ -57,33 +57,24 @@ public class RoomManagerImpl implements RoomService {
 
     @Activate
     public void activate() {
-        System.out.println("[RoomManagerImpl] Bundle ACTIVATING...");
-        loadSeedData();
-        System.out.println("[RoomManagerImpl] Loaded " + roomTypeRepository.count() + " room types");
-        System.out.println("[RoomManagerImpl] Loaded " + roomRepository.count() + " rooms");
-        System.out.println("[RoomManagerImpl] Bundle ACTIVATED ✓");
+        System.out.println("==============================================");
+        System.out.println("[RoomManagerImpl] Bundle ACTIVATED ✅");
+        System.out.println("  - Service Registered: RoomService");
+        System.out.println("  - Using H2 Database via JDBC DataSource");
+        System.out.println("==============================================");
+
+        // Initialize repositories with DataSource
+        this.roomTypeRepository = new RoomTypeRepository(dataSource);
+        this.roomRepository = new RoomRepository(dataSource, roomTypeRepository);
+
+        // Log counts from database
+        System.out.println("[RoomManagerImpl] Found " + roomTypeRepository.count() + " room types in database");
+        System.out.println("[RoomManagerImpl] Found " + roomRepository.count() + " rooms in database");
     }
 
     @Deactivate
     public void deactivate() {
         System.out.println("[RoomManagerImpl] Bundle DEACTIVATED");
-    }
-
-    private void loadSeedData() {
-        RoomType standard = roomTypeRepository.save(new RoomType(null, "Standard",
-                "Standard room with queen bed", 2, new BigDecimal("100.00"), new BigDecimal("0.10")));
-
-        RoomType deluxe = roomTypeRepository.save(new RoomType(null, "Deluxe",
-                "Deluxe room with king bed and city view", 2, new BigDecimal("150.00"), new BigDecimal("0.10")));
-
-        RoomType suite = roomTypeRepository.save(new RoomType(null, "Suite",
-                "Executive suite with separate living area", 4, new BigDecimal("250.00"), new BigDecimal("0.10")));
-
-        roomRepository.save(new Room(null, "101", 1, standard, STATUS_AVAILABLE));
-        roomRepository.save(new Room(null, "102", 1, standard, STATUS_AVAILABLE));
-        roomRepository.save(new Room(null, "201", 2, deluxe, STATUS_AVAILABLE));
-        roomRepository.save(new Room(null, "202", 2, deluxe, STATUS_AVAILABLE));
-        roomRepository.save(new Room(null, "301", 3, suite, STATUS_AVAILABLE));
     }
 
     // ============ Room Type Operations ============

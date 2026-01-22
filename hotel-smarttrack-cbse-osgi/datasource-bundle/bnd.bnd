@@ -1,0 +1,24 @@
+Bundle-SymbolicName: ${project.groupId}.datasource
+Bundle-Name: Hotel SmartTrack DataSource Bundle
+Bundle-Version: ${project.version}
+Bundle-Description: H2 database initialization and schema management
+
+# Export nothing - this is a service-only bundle
+Export-Package: 
+
+# Include resources (schema.sql and data.sql)
+Include-Resource: \
+    schema.sql=src/main/resources/schema.sql,\
+    data.sql=src/main/resources/data.sql
+
+# Import required packages (exclude compile-time annotations)
+Import-Package: \
+    javax.sql,\
+    java.sql,\
+    org.osgi.framework,\
+    org.h2.jdbcx,\
+    !org.osgi.service.component.annotations,\
+    *
+
+# Enable Declarative Services
+Service-Component: *

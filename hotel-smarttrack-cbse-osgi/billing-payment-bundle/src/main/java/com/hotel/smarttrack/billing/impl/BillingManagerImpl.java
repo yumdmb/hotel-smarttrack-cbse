@@ -8,16 +8,26 @@ import com.hotel.smarttrack.service.StayService;
 
 import org.osgi.service.component.annotations.*;
 
+import javax.sql.DataSource;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * BillingManagerImpl - OSGi DS implementation of BillingService.
+ * Uses JDBC-based repository with DataSource from Karaf's pax-jdbc.
+ */
 @Component(service = BillingService.class, immediate = true)
 public class BillingManagerImpl implements BillingService {
 
-    private final InvoiceRepository repo = new InvoiceRepository();
+    // ============ DataSource and Repository ============
+
+    @Reference(target = "(osgi.jndi.service.name=jdbc/hoteldb)")
+    private DataSource dataSource;
+
+    private InvoiceRepository repo;
 
     // ============ OSGi Service Reference ============
 
@@ -29,6 +39,7 @@ public class BillingManagerImpl implements BillingService {
         System.out.println("==============================================");
         System.out.println("[BillingManagerImpl] Bundle ACTIVATED ✅");
         System.out.println("  - Service Registered: BillingService");
+        System.out.println("  - Using H2 Database via JDBC DataSource");
         System.out.println("  - StayService: " + (stayService != null ? "available" : "missing"));
         System.out.println("  - UC17 Generate Billing Documents (Invoice)");
         System.out.println("  - UC18 Process & Record Payments");
@@ -36,27 +47,9 @@ public class BillingManagerImpl implements BillingService {
         System.out.println("  - UC20 Compute Total Charges");
         System.out.println("==============================================");
 
-        loadSeedData();
-        System.out.println("[BillingManagerImpl] Loaded " + repo.findAll().size() + " invoices");
-    }
-
-    private void loadSeedData() {
-        try {
-            stayService.getStayById(1L).orElseThrow(
-                    () -> new RuntimeException("Stay ID 1 not found"));
-
-            BigDecimal roomCharges = stayService.calculateRoomCharges(1L);
-            BigDecimal incidentalCharges = stayService.getTotalIncidentalCharges(1L);
-            BigDecimal subtotal = roomCharges.add(incidentalCharges);
-            BigDecimal taxes = subtotal.multiply(new BigDecimal("0.10"));
-            BigDecimal totalAmount = subtotal.add(taxes);
-
-            Invoice invoice = new Invoice(null, null, 1L, totalAmount, "Issued", LocalDateTime.now());
-            repo.save(invoice);
-
-        } catch (Exception e) {
-            System.out.println("[BillingManagerImpl] WARNING: Could not load seed data - " + e.getMessage());
-        }
+        // Initialize repository with DataSource
+        this.repo = new InvoiceRepository(dataSource);
+        System.out.println("[BillingManagerImpl] Found " + repo.count() + " invoices in database");
     }
 
     @Deactivate

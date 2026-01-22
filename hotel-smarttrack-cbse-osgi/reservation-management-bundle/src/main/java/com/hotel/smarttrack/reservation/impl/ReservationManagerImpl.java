@@ -9,15 +9,25 @@ import com.hotel.smarttrack.service.ReservationService;
 import com.hotel.smarttrack.service.RoomService;
 import org.osgi.service.component.annotations.*;
 
+import javax.sql.DataSource;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * ReservationManagerImpl - OSGi DS implementation of ReservationService.
+ * Uses JDBC-based repository with DataSource from Karaf's pax-jdbc.
+ */
 @Component(service = ReservationService.class, immediate = true)
 public class ReservationManagerImpl implements ReservationService {
 
-    private final ReservationRepository repo = new ReservationRepository();
+    // ============ DataSource and Repository ============
+
+    @Reference(target = "(osgi.jndi.service.name=jdbc/hoteldb)")
+    private DataSource dataSource;
+
+    private ReservationRepository repo;
 
     // ============ OSGi Service References ============
 
@@ -32,6 +42,7 @@ public class ReservationManagerImpl implements ReservationService {
         System.out.println("==============================================");
         System.out.println("[ReservationManagerImpl] Bundle ACTIVATED ✅");
         System.out.println("  - Service Registered: ReservationService");
+        System.out.println("  - Using H2 Database via JDBC DataSource");
         System.out.println("  - GuestService: " + (guestService != null ? "available" : "missing"));
         System.out.println("  - RoomService: " + (roomService != null ? "available" : "missing"));
         System.out.println("  - UC9  Reservation Operations (CRUD)");
@@ -40,38 +51,9 @@ public class ReservationManagerImpl implements ReservationService {
         System.out.println("  - UC12 Track Reservation Status");
         System.out.println("==============================================");
 
-        loadSeedData();
-        System.out.println("[ReservationManagerImpl] Loaded " + repo.findAll().size() + " reservations");
-    }
-
-    private void loadSeedData() {
-        try {
-            Guest john = guestService.getGuestById(1L).orElseThrow(
-                    () -> new RuntimeException("Guest ID 1 not found"));
-            Guest jane = guestService.getGuestById(2L).orElseThrow(
-                    () -> new RuntimeException("Guest ID 2 not found"));
-            RoomType deluxe = roomService.getRoomTypeById(2L).orElseThrow(
-                    () -> new RuntimeException("RoomType ID 2 not found"));
-            RoomType standard = roomService.getRoomTypeById(1L).orElseThrow(
-                    () -> new RuntimeException("RoomType ID 1 not found"));
-            Room room201 = roomService.getRoomById(3L).orElseThrow(
-                    () -> new RuntimeException("Room ID 3 not found"));
-            Room room101 = roomService.getRoomById(1L).orElseThrow(
-                    () -> new RuntimeException("Room ID 1 not found"));
-
-            Reservation r1 = new Reservation(null, john, deluxe, room201,
-                    LocalDate.of(2026, 1, 25), LocalDate.of(2026, 1, 27),
-                    2, "CONFIRMED", "Late check-in requested");
-            repo.save(r1);
-
-            Reservation r2 = new Reservation(null, jane, standard, room101,
-                    LocalDate.of(2026, 1, 26), LocalDate.of(2026, 1, 28),
-                    1, "CONFIRMED", null);
-            repo.save(r2);
-
-        } catch (Exception e) {
-            System.out.println("[ReservationManagerImpl] WARNING: Could not load seed data - " + e.getMessage());
-        }
+        // Initialize repository with DataSource and services
+        this.repo = new ReservationRepository(dataSource, guestService, roomService);
+        System.out.println("[ReservationManagerImpl] Found " + repo.count() + " reservations in database");
     }
 
     @Deactivate

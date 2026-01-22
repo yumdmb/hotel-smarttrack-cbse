@@ -14,8 +14,14 @@
         
         <!-- Required Karaf Features -->
         <feature>scr</feature>
+        <feature>jdbc</feature>
+        <feature>pax-jdbc-h2</feature>
+        <feature>pax-jdbc-config</feature>
         
-        <!-- Common Bundle (must be first - provides shared interfaces) -->
+        <!-- DataSource Bundle (first - initializes database) -->
+        <bundle start-level="78">file:../datasource-bundle/target/datasource-bundle-1.0-SNAPSHOT.jar</bundle>
+        
+        <!-- Common Bundle (provides shared interfaces) -->
         <bundle start-level="80">file:../common-bundle/target/common-bundle-1.0-SNAPSHOT.jar</bundle>
         
         <!-- Domain Bundles (order matters for dependencies) -->

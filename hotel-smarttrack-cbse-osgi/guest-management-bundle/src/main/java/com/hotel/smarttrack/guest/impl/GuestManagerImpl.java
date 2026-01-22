@@ -4,13 +4,23 @@ import com.hotel.smarttrack.entity.Guest;
 import com.hotel.smarttrack.service.GuestService;
 import org.osgi.service.component.annotations.*;
 
+import javax.sql.DataSource;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Guest Manager Implementation.
+ * 
+ * Provides GuestService using JDBC-based GuestRepository.
+ * DataSource is injected from Karaf's pax-jdbc.
+ */
 @Component(service = GuestService.class, immediate = true)
 public class GuestManagerImpl implements GuestService {
 
-    private final GuestRepository repo = new GuestRepository();
+    private GuestRepository repo;
+
+    @Reference(target = "(osgi.jndi.service.name=jdbc/hoteldb)")
+    private DataSource dataSource;
 
     @Activate
     public void activate() {
@@ -20,22 +30,14 @@ public class GuestManagerImpl implements GuestService {
         System.out.println("  - UC1  Manage Guest Records (CRUD)");
         System.out.println("  - UC2  Search Guest Profiles");
         System.out.println("  - UC4  Manage Guest Status (Active/Inactive/Blacklisted)");
+        System.out.println("  - Using H2 Database via JDBC DataSource");
         System.out.println("==============================================");
 
-        loadSeedData();
-        System.out.println("[GuestManagerImpl] Loaded " + repo.findAll().size() + " guests");
-    }
+        // Initialize repository with DataSource
+        this.repo = new GuestRepository(dataSource);
 
-    private void loadSeedData() {
-        // Seed data per SEED_DATA_SPEC.md - IDs 1-4
-        repo.save(new Guest(null, "John Doe", "john.doe@email.com",
-                "+1-555-0101", "ID001", "ACTIVE", null));
-        repo.save(new Guest(null, "Jane Smith", "jane.smith@email.com",
-                "+1-555-0102", "ID002", "ACTIVE", null));
-        repo.save(new Guest(null, "Bob Wilson", "bob.wilson@email.com",
-                "+1-555-0103", "ID003", "ACTIVE", null));
-        repo.save(new Guest(null, "Alice Brown", "alice.brown@email.com",
-                "+1-555-0104", "ID004", "INACTIVE", "Account suspended"));
+        // Log count from database
+        System.out.println("[GuestManagerImpl] Found " + repo.findAll().size() + " guests in database");
     }
 
     @Deactivate
@@ -112,6 +114,7 @@ public class GuestManagerImpl implements GuestService {
                 .orElseThrow(() -> new IllegalArgumentException("Guest not found: " + guestId));
 
         g.setStatus("INACTIVE");
+        g.setStatusJustification(justification);
         repo.save(g);
     }
 
@@ -121,6 +124,7 @@ public class GuestManagerImpl implements GuestService {
                 .orElseThrow(() -> new IllegalArgumentException("Guest not found: " + guestId));
 
         g.setStatus("BLACKLISTED");
+        g.setStatusJustification(justification);
         repo.save(g);
     }
 
@@ -130,6 +134,7 @@ public class GuestManagerImpl implements GuestService {
                 .orElseThrow(() -> new IllegalArgumentException("Guest not found: " + guestId));
 
         g.setStatus("ACTIVE");
+        g.setStatusJustification(null);
         repo.save(g);
     }
 
