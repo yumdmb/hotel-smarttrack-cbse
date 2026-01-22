@@ -91,23 +91,17 @@ CREATE TABLE IF NOT EXISTS incidental_charges (
 );
 
 -- =============================================================================
--- 7. INVOICES (references stays, guests)
+-- 7. INVOICES (references stays, reservations)
 -- =============================================================================
 CREATE TABLE IF NOT EXISTS invoices (
     invoice_id BIGINT AUTO_INCREMENT PRIMARY KEY,
     stay_id BIGINT,
-    guest_id BIGINT NOT NULL,
-    room_charges DECIMAL(10,2) DEFAULT 0.00,
-    incidental_charges DECIMAL(10,2) DEFAULT 0.00,
-    taxes DECIMAL(10,2) DEFAULT 0.00,
-    discounts DECIMAL(10,2) DEFAULT 0.00,
-    total_amount DECIMAL(10,2) DEFAULT 0.00,
-    amount_paid DECIMAL(10,2) DEFAULT 0.00,
-    outstanding_balance DECIMAL(10,2) DEFAULT 0.00,
-    status VARCHAR(50) DEFAULT 'DRAFT',
-    issued_time TIMESTAMP,
+    reservation_id BIGINT,
+    amount DECIMAL(10,2) DEFAULT 0.00,
+    status VARCHAR(50) DEFAULT 'UNPAID',
+    issued_at TIMESTAMP,
     FOREIGN KEY (stay_id) REFERENCES stays(stay_id),
-    FOREIGN KEY (guest_id) REFERENCES guests(guest_id)
+    FOREIGN KEY (reservation_id) REFERENCES reservations(reservation_id)
 );
 
 -- =============================================================================
@@ -118,7 +112,8 @@ CREATE TABLE IF NOT EXISTS payments (
     invoice_id BIGINT NOT NULL,
     amount DECIMAL(10,2) NOT NULL,
     payment_method VARCHAR(50),
+    transaction_reference VARCHAR(100),
     payment_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    reference_number VARCHAR(100),
+    status VARCHAR(50) DEFAULT 'COMPLETED',
     FOREIGN KEY (invoice_id) REFERENCES invoices(invoice_id)
 );

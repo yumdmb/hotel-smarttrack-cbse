@@ -53,7 +53,9 @@ Bundle-Version: ${project.version}
 Import-Package: \
     com.hotel.smarttrack.entity,\
     com.hotel.smarttrack.service,\
-    org.osgi.service.component.annotations;resolution:=optional
+    javax.sql,\
+    org.osgi.service.component.annotations;resolution:=optional,\
+    *
 
 Private-Package: com.hotel.smarttrack.billing.impl
 -dsannotations: *

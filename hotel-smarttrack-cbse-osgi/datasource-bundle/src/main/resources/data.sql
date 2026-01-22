@@ -127,10 +127,25 @@ INSERT INTO incidental_charges (charge_id, stay_id, service_type, description, a
 -- =============================================================================
 -- 7. INVOICES
 -- =============================================================================
-INSERT INTO invoices (invoice_id, stay_id, guest_id, room_charges, incidental_charges, taxes, discounts, total_amount, amount_paid, outstanding_balance, status, issued_time) VALUES
-(1, 4, 1, 300.00, 83.00, 38.30, 0.00, 421.30, 0.00, 421.30, 'ISSUED', '2026-01-08 11:00:00'),
-(2, 5, 2, 400.00, 200.00, 60.00, 50.00, 610.00, 0.00, 610.00, 'ISSUED', '2026-01-12 10:30:00'),
-(3, 3, 10, 1050.00, 180.00, 123.00, 0.00, 1353.00, 0.00, 1353.00, 'ISSUED', '2026-01-20 12:00:00');
+INSERT INTO invoices (invoice_id, stay_id, reservation_id, amount, status, issued_at) VALUES
+(1, 4, 9, 421.30, 'UNPAID', '2026-01-08 11:00:00'),
+(2, 5, 10, 610.00, 'UNPAID', '2026-01-12 10:30:00'),
+(3, 3, 8, 1353.00, 'UNPAID', '2026-01-20 12:00:00');
+
+-- =============================================================================
+-- RESET AUTO-INCREMENT SEQUENCES
+-- =============================================================================
+-- After inserting seed data with explicit IDs, reset the identity columns
+-- to start from the next available ID to prevent primary key conflicts.
+-- =============================================================================
+ALTER TABLE room_types ALTER COLUMN room_type_id RESTART WITH 100;
+ALTER TABLE guests ALTER COLUMN guest_id RESTART WITH 100;
+ALTER TABLE rooms ALTER COLUMN room_id RESTART WITH 100;
+ALTER TABLE reservations ALTER COLUMN reservation_id RESTART WITH 100;
+ALTER TABLE stays ALTER COLUMN stay_id RESTART WITH 100;
+ALTER TABLE incidental_charges ALTER COLUMN charge_id RESTART WITH 100;
+ALTER TABLE invoices ALTER COLUMN invoice_id RESTART WITH 100;
+ALTER TABLE payments ALTER COLUMN payment_id RESTART WITH 100;
 
 -- =============================================================================
 -- SUMMARY

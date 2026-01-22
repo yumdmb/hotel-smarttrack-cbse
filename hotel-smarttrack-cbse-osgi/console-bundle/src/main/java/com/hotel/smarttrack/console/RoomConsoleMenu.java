@@ -75,15 +75,14 @@ public class RoomConsoleMenu {
         Long id = input.readLong("Room ID: ");
         Optional<Room> room = roomService.getRoomById(id);
         room.ifPresentOrElse(
-            this::printRoom,
-            () -> input.println("Room not found.")
-        );
+                this::printRoom,
+                () -> input.println("Room not found."));
     }
 
     private void viewAvailableRooms() {
         LocalDate checkIn = readDate("Check-in Date (YYYY-MM-DD): ");
         LocalDate checkOut = readDate("Check-out Date (YYYY-MM-DD): ");
-        
+
         List<Room> rooms = roomService.getAvailableRooms(checkIn, checkOut);
         if (rooms.isEmpty()) {
             input.println("No available rooms for this date range.");
@@ -95,7 +94,7 @@ public class RoomConsoleMenu {
 
     private void viewRoomsByStatus() {
         String status = input.readLine("Status (AVAILABLE/OCCUPIED/UNDER_CLEANING/OUT_OF_SERVICE): ");
-        
+
         List<Room> rooms = roomService.getRoomsByStatus(status);
         if (rooms.isEmpty()) {
             input.println("No rooms with status: " + status);
@@ -108,10 +107,24 @@ public class RoomConsoleMenu {
     private void createRoom() {
         String roomNumber = input.readLine("Room Number: ");
         int floorNumber = input.readInt("Floor Number: ");
-        Long roomTypeId = input.readLong("Room Type ID: ");
 
-        Room room = roomService.createRoom(roomNumber, floorNumber, roomTypeId);
-        input.println("✅ Created: " + room);
+        // Display available room types for reference
+        List<RoomType> types = roomService.getAllRoomTypes();
+        if (!types.isEmpty()) {
+            StringBuilder hint = new StringBuilder("Room Type ID (");
+            for (int i = 0; i < types.size(); i++) {
+                RoomType t = types.get(i);
+                hint.append(t.getRoomTypeId()).append("=").append(t.getTypeName());
+                if (i < types.size() - 1)
+                    hint.append(", ");
+            }
+            hint.append("): ");
+            Long roomTypeId = input.readLong(hint.toString());
+            Room room = roomService.createRoom(roomNumber, floorNumber, roomTypeId);
+            input.println("✅ Created: " + room);
+        } else {
+            input.println("[!] No room types available. Please create a room type first (option 8).");
+        }
     }
 
     private void updateRoomStatus() {
@@ -130,7 +143,7 @@ public class RoomConsoleMenu {
         }
         input.println("\n--- All Room Types ---");
         types.forEach(t -> input.println(String.format("ID=%d | %s | Base Price: $%s | Max Guests: %d",
-            t.getRoomTypeId(), t.getTypeName(), t.getBasePrice(), t.getMaxOccupancy())));
+                t.getRoomTypeId(), t.getTypeName(), t.getBasePrice(), t.getMaxOccupancy())));
     }
 
     private void createRoomType() {
@@ -145,11 +158,11 @@ public class RoomConsoleMenu {
 
     private void printRoom(Room room) {
         input.println(String.format("ID=%d | Room %s | Floor %d | Type: %s | Status: %s",
-            room.getRoomId(),
-            room.getRoomNumber(),
-            room.getFloorNumber(),
-            room.getRoomType() != null ? room.getRoomType().getTypeName() : "N/A",
-            room.getStatus()));
+                room.getRoomId(),
+                room.getRoomNumber(),
+                room.getFloorNumber(),
+                room.getRoomType() != null ? room.getRoomType().getTypeName() : "N/A",
+                room.getStatus()));
     }
 
     // ============ Utility Methods ============
