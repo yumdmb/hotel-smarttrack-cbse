@@ -262,6 +262,17 @@ public class StayManagerImpl implements StayService {
             return BigDecimal.ZERO;
         }
 
+        // If billing service is available and an invoice exists, use billing's
+        // outstanding balance
+        if (billingService != null) {
+            var invoiceOpt = billingService.getInvoiceByStay(stayId);
+            if (invoiceOpt.isPresent()) {
+                Long invoiceId = invoiceOpt.get().getInvoiceId();
+                return billingService.getOutstandingBalance(invoiceId);
+            }
+        }
+
+        // No invoice yet - calculate raw charges
         BigDecimal roomCharges = calculateRoomCharges(stayId);
         BigDecimal incidentalTotal = chargeRepository.getTotalChargesForStay(stayId);
 
