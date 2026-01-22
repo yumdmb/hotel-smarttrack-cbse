@@ -29,27 +29,39 @@ public class RoomConsoleMenu {
             input.println("\n==============================");
             input.println("       ROOM MANAGEMENT        ");
             input.println("==============================");
-            input.println("1. View All Rooms");
-            input.println("2. View Room by ID");
-            input.println("3. View Available Rooms (by date range)");
-            input.println("4. View Rooms by Status");
-            input.println("5. Create Room");
-            input.println("6. Update Room Status");
-            input.println("7. View All Room Types");
-            input.println("8. Create Room Type");
-            input.println("0. Back to Main Menu");
+            input.println("UC5 - Manage Room Records:");
+            input.println("  1. View All Rooms");
+            input.println("  2. View Room by ID");
+            input.println("  3. Create Room");
+            input.println("  4. View All Room Types");
+            input.println("  5. Create Room Type");
+            input.println("");
+            input.println("UC6 - Manage Room Status:");
+            input.println("  6. View Rooms by Status");
+            input.println("  7. Update Room Status");
+            input.println("");
+            input.println("UC7 - Manage Room Pricing:");
+            input.println("  8. View Room Type Pricing");
+            input.println("  9. Update Room Type Pricing");
+            input.println("");
+            input.println("UC8 - Display Room Availability:");
+            input.println(" 10. View Available Rooms (by date range)");
+            input.println("");
+            input.println("  0. Back to Main Menu");
 
             String choice = input.readLine("Choose: ");
             try {
                 switch (choice) {
                     case "1" -> viewAllRooms();
                     case "2" -> viewRoomById();
-                    case "3" -> viewAvailableRooms();
-                    case "4" -> viewRoomsByStatus();
-                    case "5" -> createRoom();
-                    case "6" -> updateRoomStatus();
-                    case "7" -> viewAllRoomTypes();
-                    case "8" -> createRoomType();
+                    case "3" -> createRoom();
+                    case "4" -> viewAllRoomTypes();
+                    case "5" -> createRoomType();
+                    case "6" -> viewRoomsByStatus();
+                    case "7" -> updateRoomStatus();
+                    case "8" -> viewRoomTypePricing();
+                    case "9" -> updateRoomTypePricing();
+                    case "10" -> viewAvailableRooms();
                     case "0" -> running = false;
                     default -> input.println("Invalid option.");
                 }
@@ -106,7 +118,18 @@ public class RoomConsoleMenu {
     }
 
     private void createRoom() {
-        String roomNumber = input.readLine("Room Number: ");
+        // Display available room types first
+        List<RoomType> types = roomService.getAllRoomTypes();
+        if (types.isEmpty()) {
+            input.println("⚠ No room types available. Please create a room type first.");
+            return;
+        }
+        
+        input.println("\n--- Available Room Types ---");
+        types.forEach(t -> input.println(String.format("  %d = %s (Base Price: $%s/night, Max Guests: %d)",
+            t.getRoomTypeId(), t.getTypeName(), t.getBasePrice(), t.getMaxOccupancy())));
+        
+        String roomNumber = input.readLine("\nRoom Number: ");
         int floorNumber = input.readInt("Floor Number: ");
         Long roomTypeId = input.readLong("Room Type ID: ");
 
@@ -150,6 +173,63 @@ public class RoomConsoleMenu {
             room.getFloorNumber(),
             room.getRoomType() != null ? room.getRoomType().getTypeName() : "N/A",
             room.getStatus()));
+    }
+
+    // ============ UC7: Manage Room Pricing ============
+
+    private void viewRoomTypePricing() {
+        List<RoomType> types = roomService.getAllRoomTypes();
+        if (types.isEmpty()) {
+            input.println("No room types found.");
+            return;
+        }
+        
+        input.println("\n┌──────────────────────────────────────────────────────┐");
+        input.println("│                 ROOM TYPE PRICING                    │");
+        input.println("├─────┬─────────────────┬──────────────┬───────────────┤");
+        input.println("│ ID  │ Type Name       │ Base Price   │ Max Guests    │");
+        input.println("├─────┼─────────────────┼──────────────┼───────────────┤");
+        
+        for (RoomType t : types) {
+            input.println(String.format("│ %-3d │ %-15s │ $%-11s │ %-13d │",
+                t.getRoomTypeId(),
+                t.getTypeName(),
+                t.getBasePrice(),
+                t.getMaxOccupancy()));
+        }
+        input.println("└─────┴─────────────────┴──────────────┴───────────────┘");
+    }
+
+    private void updateRoomTypePricing() {
+        // First show current pricing
+        List<RoomType> types = roomService.getAllRoomTypes();
+        if (types.isEmpty()) {
+            input.println("No room types available.");
+            return;
+        }
+        
+        input.println("\n--- Current Room Type Pricing ---");
+        types.forEach(t -> input.println(String.format("  ID=%d | %s | Current Price: $%s/night",
+            t.getRoomTypeId(), t.getTypeName(), t.getBasePrice())));
+        
+        Long roomTypeId = input.readLong("\nRoom Type ID to update: ");
+        
+        Optional<RoomType> roomTypeOpt = types.stream()
+            .filter(t -> t.getRoomTypeId().equals(roomTypeId))
+            .findFirst();
+        
+        if (roomTypeOpt.isEmpty()) {
+            input.println("⚠ Room type not found.");
+            return;
+        }
+        
+        RoomType roomType = roomTypeOpt.get();
+        input.println("Current price for " + roomType.getTypeName() + ": $" + roomType.getBasePrice());
+        
+        BigDecimal newPrice = readBigDecimal("New Base Price per night: $");
+        
+        roomService.updateRoomPricing(roomTypeId, newPrice, null);
+        input.println("✅ Price updated successfully. New price: $" + newPrice + "/night");
     }
 
     // ============ Utility Methods ============

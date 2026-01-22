@@ -37,97 +37,87 @@ public class RoomManagementConsole {
         boolean running = true;
         while (running) {
             printRoomMenu();
-            System.out.print("\nEnter your choice: ");
+            System.out.print("\nChoose: ");
             String choice = scanner.nextLine().trim();
 
-            switch (choice) {
-                case "1" -> manageRoomRecords();
-                case "2" -> manageRoomStatus();
-                case "3" -> manageRoomPricing();
-                case "4" -> displayRoomAvailability();
-                case "0" -> running = false;
-                default -> System.out.println("\n⚠ Invalid choice. Please enter a number from 0-4.");
+            try {
+                switch (choice) {
+                    case "1" -> viewAllRooms();
+                    case "2" -> viewRoomDetails();
+                    case "3" -> createRoom();
+                    case "4" -> viewAllRoomTypes();
+                    case "5" -> createRoomType();
+                    case "6" -> viewRoomsByStatus();
+                    case "7" -> updateRoomStatus();
+                    case "8" -> viewRoomTypePricing();
+                    case "9" -> updateRoomTypePricing();
+                    case "10" -> displayRoomAvailability();
+                    case "0" -> running = false;
+                    default -> System.out.println("⚠ Invalid option.");
+                }
+            } catch (IllegalArgumentException ex) {
+                System.out.println("⚠ Error: " + ex.getMessage());
+            } catch (Exception ex) {
+                System.out.println("⚠ Unexpected error: " + ex.getMessage());
             }
         }
     }
 
     private void printRoomMenu() {
-        System.out.println("\n╔══════════════════════════════════════════════════════════════╗");
-        System.out.println("║                    ROOM MANAGEMENT                           ║");
-        System.out.println("╠══════════════════════════════════════════════════════════════╣");
-        System.out.println("║                                                              ║");
-        System.out.println("║   1. Manage Room Records                                     ║");
-        System.out.println("║   2. Manage Room Status                                      ║");
-        System.out.println("║   3. Manage Room Pricing                                     ║");
-        System.out.println("║   4. Display Room Availability                               ║");
-        System.out.println("║                                                              ║");
-        System.out.println("║   0. Back to Main Menu                                       ║");
-        System.out.println("║                                                              ║");
-        System.out.println("╚══════════════════════════════════════════════════════════════╝");
+        System.out.println("\n==============================");
+        System.out.println("       ROOM MANAGEMENT        ");
+        System.out.println("==============================");
+        System.out.println("UC5 - Manage Room Records:");
+        System.out.println("  1. View All Rooms");
+        System.out.println("  2. View Room by ID");
+        System.out.println("  3. Create Room");
+        System.out.println("  4. View All Room Types");
+        System.out.println("  5. Create Room Type");
+        System.out.println("");
+        System.out.println("UC6 - Manage Room Status:");
+        System.out.println("  6. View Rooms by Status");
+        System.out.println("  7. Update Room Status");
+        System.out.println("");
+        System.out.println("UC7 - Manage Room Pricing:");
+        System.out.println("  8. View Room Type Pricing");
+        System.out.println("  9. Update Room Type Pricing");
+        System.out.println("");
+        System.out.println("UC8 - Display Room Availability:");
+        System.out.println(" 10. View Available Rooms (by date range)");
+        System.out.println("");
+        System.out.println("  0. Back to Main Menu");
     }
 
     // ============ UC5: Manage Room Records ============
-
-    private void manageRoomRecords() {
-        boolean running = true;
-        while (running) {
-            System.out.println("\n┌─────────────────────────────────────────────────────────────┐");
-            System.out.println("│  MANAGE ROOM RECORDS                                        │");
-            System.out.println("├─────────────────────────────────────────────────────────────┤");
-            System.out.println("│  1. Create Room                                             │");
-            System.out.println("│  2. View All Rooms                                          │");
-            System.out.println("│  3. View Room Details                                       │");
-            System.out.println("│  4. Update Room                                             │");
-            System.out.println("│  5. Delete Room                                             │");
-            System.out.println("│  6. Manage Room Types                                       │");
-            System.out.println("│  0. Back                                                    │");
-            System.out.println("└─────────────────────────────────────────────────────────────┘");
-            System.out.print("\nChoice: ");
-            String choice = scanner.nextLine().trim();
-
-            switch (choice) {
-                case "1" -> createRoom();
-                case "2" -> viewAllRooms();
-                case "3" -> viewRoomDetails();
-                case "4" -> updateRoom();
-                case "5" -> deleteRoom();
-                case "6" -> manageRoomTypes();
-                case "0" -> running = false;
-                default -> System.out.println("⚠ Invalid choice.");
-            }
-        }
-    }
 
     private void createRoom() {
         System.out.println("\n▸ CREATE NEW ROOM");
 
         try {
-            System.out.print("Room Number: ");
-            String roomNumber = scanner.nextLine().trim();
-
-            System.out.print("Floor Number: ");
-            int floorNumber = Integer.parseInt(scanner.nextLine().trim());
-
-            // Display room types
+            // Display available room types first
             List<RoomType> roomTypes = roomService.getAllRoomTypes();
             if (roomTypes.isEmpty()) {
                 System.out.println("⚠ No room types available. Please create a room type first.");
                 return;
             }
 
-            System.out.println("\nAvailable Room Types:");
+            System.out.println("\n--- Available Room Types ---");
             for (RoomType rt : roomTypes) {
-                System.out.printf("  %d. %s - $%.2f/night\n",
-                        rt.getRoomTypeId(), rt.getTypeName(), rt.getBasePrice());
+                System.out.printf("  %d = %s (Base Price: $%.2f/night, Max Guests: %d)\n",
+                        rt.getRoomTypeId(), rt.getTypeName(), rt.getBasePrice(), rt.getMaxOccupancy());
             }
 
-            System.out.print("Select Room Type ID: ");
+            System.out.print("\nRoom Number: ");
+            String roomNumber = scanner.nextLine().trim();
+
+            System.out.print("Floor Number: ");
+            int floorNumber = Integer.parseInt(scanner.nextLine().trim());
+
+            System.out.print("Room Type ID: ");
             Long roomTypeId = Long.parseLong(scanner.nextLine().trim());
 
             Room room = roomService.createRoom(roomNumber, floorNumber, roomTypeId);
-            System.out.println("✓ Room created successfully!");
-            System.out.printf("  Room #%s, Floor %d, Type: %s\n",
-                    room.getRoomNumber(), room.getFloorNumber(), room.getRoomType().getTypeName());
+            System.out.println("✅ Created: " + room);
 
         } catch (NumberFormatException e) {
             System.out.println("⚠ Error: Invalid number format.");
@@ -137,121 +127,59 @@ public class RoomManagementConsole {
     }
 
     private void viewAllRooms() {
-        System.out.println("\n▸ ALL ROOMS");
+        System.out.println("\n--- All Rooms ---");
         List<Room> rooms = roomService.getAllRooms();
 
         if (rooms.isEmpty()) {
-            System.out.println("  No rooms found.");
+            System.out.println("No rooms found.");
             return;
         }
 
-        System.out.println("\n┌──────┬────────┬─────────────────┬───────────────────┐");
-        System.out.println("│ Room │ Floor  │ Type            │ Status            │");
-        System.out.println("├──────┼────────┼─────────────────┼───────────────────┤");
-
         for (Room room : rooms) {
-            System.out.printf("│ %-4s │ %-6d │ %-15s │ %-17s │\n",
+            System.out.printf("ID=%d | Room %s | Floor %d | Type: %s | Status: %s\n",
+                    room.getRoomId(),
                     room.getRoomNumber(),
                     room.getFloorNumber(),
                     room.getRoomType().getTypeName(),
                     room.getStatus());
         }
-        System.out.println("└──────┴────────┴─────────────────┴───────────────────┘");
     }
 
     private void viewRoomDetails() {
-        System.out.print("\nEnter Room Number: ");
-        String roomNumber = scanner.nextLine().trim();
-
-        Optional<Room> roomOpt = roomService.getRoomByNumber(roomNumber);
-        if (roomOpt.isEmpty()) {
-            System.out.println("⚠ Room not found.");
-            return;
-        }
-
-        Room room = roomOpt.get();
-        RoomType type = room.getRoomType();
-
-        System.out.println("\n┌─────────────────────────────────────────────────────────────┐");
-        System.out.println("│  ROOM DETAILS                                               │");
-        System.out.println("├─────────────────────────────────────────────────────────────┤");
-        System.out.printf("│  Room Number:     %-40s │\n", room.getRoomNumber());
-        System.out.printf("│  Floor:           %-40d │\n", room.getFloorNumber());
-        System.out.printf("│  Type:            %-40s │\n", type.getTypeName());
-        System.out.printf("│  Max Occupancy:   %-40d │\n", type.getMaxOccupancy());
-        System.out.printf("│  Base Price:      $%-39.2f │\n", type.getBasePrice());
-        System.out.printf("│  Status:          %-40s │\n", room.getStatus());
-        System.out.println("└─────────────────────────────────────────────────────────────┘");
-    }
-
-    private void updateRoom() {
-        System.out.print("\nEnter Room Number to Update: ");
-        String roomNumber = scanner.nextLine().trim();
-
-        Optional<Room> roomOpt = roomService.getRoomByNumber(roomNumber);
-        if (roomOpt.isEmpty()) {
-            System.out.println("⚠ Room not found.");
-            return;
-        }
-
-        Room room = roomOpt.get();
-
+        System.out.print("\nRoom ID: ");
         try {
-            System.out.print("New Floor Number (current: " + room.getFloorNumber() + "): ");
-            String floorInput = scanner.nextLine().trim();
-            if (!floorInput.isEmpty()) {
-                room.setFloorNumber(Integer.parseInt(floorInput));
+            Long roomId = Long.parseLong(scanner.nextLine().trim());
+            
+            Optional<Room> roomOpt = roomService.getRoomById(roomId);
+            if (roomOpt.isEmpty()) {
+                System.out.println("⚠ Room not found.");
+                return;
             }
 
-            roomService.updateRoom(room);
-            System.out.println("✓ Room updated successfully!");
-
-        } catch (Exception e) {
-            System.out.println("⚠ Error: " + e.getMessage());
+            Room room = roomOpt.get();
+            System.out.printf("ID=%d | Room %s | Floor %d | Type: %s | Status: %s\n",
+                    room.getRoomId(),
+                    room.getRoomNumber(),
+                    room.getFloorNumber(),
+                    room.getRoomType() != null ? room.getRoomType().getTypeName() : "N/A",
+                    room.getStatus());
+        } catch (NumberFormatException e) {
+            System.out.println("⚠ Error: Invalid number format.");
         }
     }
 
-    private void deleteRoom() {
-        System.out.print("\nEnter Room Number to Delete: ");
-        String roomNumber = scanner.nextLine().trim();
+    private void viewAllRoomTypes() {
+        System.out.println("\n--- All Room Types ---");
+        List<RoomType> types = roomService.getAllRoomTypes();
 
-        Optional<Room> roomOpt = roomService.getRoomByNumber(roomNumber);
-        if (roomOpt.isEmpty()) {
-            System.out.println("⚠ Room not found.");
+        if (types.isEmpty()) {
+            System.out.println("No room types found.");
             return;
         }
 
-        Room room = roomOpt.get();
-        System.out.print("Confirm delete room #" + roomNumber + "? (yes/no): ");
-        String confirm = scanner.nextLine().trim().toLowerCase();
-
-        if ("yes".equals(confirm)) {
-            roomService.deleteRoom(room.getRoomId());
-            System.out.println("✓ Room deleted successfully.");
-        } else {
-            System.out.println("  Deletion cancelled.");
-        }
-    }
-
-    private void manageRoomTypes() {
-        boolean running = true;
-        while (running) {
-            System.out.println("\n┌─────────────────────────────────────────────────────────────┐");
-            System.out.println("│  MANAGE ROOM TYPES                                          │");
-            System.out.println("├─────────────────────────────────────────────────────────────┤");
-            System.out.println("│  1. Create Room Type                                        │");
-            System.out.println("│  2. View All Room Types                                     │");
-            System.out.println("│  0. Back                                                    │");
-            System.out.println("└─────────────────────────────────────────────────────────────┘");
-            System.out.print("\nChoice: ");
-            String choice = scanner.nextLine().trim();
-
-            switch (choice) {
-                case "1" -> createRoomType();
-                case "2" -> viewAllRoomTypes();
-                case "0" -> running = false;
-                default -> System.out.println("⚠ Invalid choice.");
-            }
+        for (RoomType type : types) {
+            System.out.printf("ID=%d | %s | Base Price: $%s | Max Guests: %d\n",
+                    type.getRoomTypeId(), type.getTypeName(), type.getBasePrice(), type.getMaxOccupancy());
         }
     }
 
@@ -268,81 +196,52 @@ public class RoomManagementConsole {
             System.out.print("Max Occupancy: ");
             int maxOccupancy = Integer.parseInt(scanner.nextLine().trim());
 
-            System.out.print("Base Price per Night: $");
+            System.out.print("Base Price per night: ");
             BigDecimal basePrice = new BigDecimal(scanner.nextLine().trim());
 
             RoomType roomType = roomService.createRoomType(typeName, description, maxOccupancy, basePrice);
-            System.out.println("✓ Room type created successfully!");
-            System.out.printf("  ID: %d, %s - $%.2f/night\n",
-                    roomType.getRoomTypeId(), roomType.getTypeName(), roomType.getBasePrice());
+            System.out.println("✅ Created: " + roomType);
 
         } catch (Exception e) {
             System.out.println("⚠ Error: " + e.getMessage());
         }
     }
 
-    private void viewAllRoomTypes() {
-        System.out.println("\n▸ ALL ROOM TYPES");
-        List<RoomType> types = roomService.getAllRoomTypes();
-
-        if (types.isEmpty()) {
-            System.out.println("  No room types found.");
-            return;
-        }
-
-        System.out.println("\n┌────┬─────────────────┬──────────────┬────────────┐");
-        System.out.println("│ ID │ Type Name       │ Max Occupancy│ Base Price │");
-        System.out.println("├────┼─────────────────┼──────────────┼────────────┤");
-
-        for (RoomType type : types) {
-            System.out.printf("│ %-2d │ %-15s │ %-12d │ $%-9.2f │\n",
-                    type.getRoomTypeId(),
-                    type.getTypeName(),
-                    type.getMaxOccupancy(),
-                    type.getBasePrice());
-        }
-        System.out.println("└────┴─────────────────┴──────────────┴────────────┘");
-    }
-
     // ============ UC6: Manage Room Status ============
 
-    private void manageRoomStatus() {
-        System.out.println("\n▸ MANAGE ROOM STATUS");
-        System.out.print("Enter Room Number: ");
-        String roomNumber = scanner.nextLine().trim();
+    private void viewRoomsByStatus() {
+        System.out.print("Status (AVAILABLE/OCCUPIED/UNDER_CLEANING/OUT_OF_SERVICE): ");
+        String status = scanner.nextLine().trim();
 
-        Optional<Room> roomOpt = roomService.getRoomByNumber(roomNumber);
-        if (roomOpt.isEmpty()) {
-            System.out.println("⚠ Room not found.");
+        List<Room> rooms = roomService.getRoomsByStatus(status);
+        if (rooms.isEmpty()) {
+            System.out.println("No rooms with status: " + status);
             return;
         }
 
-        Room room = roomOpt.get();
-        System.out.println("  Current Status: " + room.getStatus());
-        System.out.println("\nAvailable Statuses:");
-        System.out.println("  1. Available");
-        System.out.println("  2. Occupied");
-        System.out.println("  3. Under Cleaning");
-        System.out.println("  4. Out of Service");
-        System.out.print("\nSelect New Status (1-4): ");
-
-        String statusChoice = scanner.nextLine().trim();
-        String newStatus = switch (statusChoice) {
-            case "1" -> "Available";
-            case "2" -> "Occupied";
-            case "3" -> "Under Cleaning";
-            case "4" -> "Out of Service";
-            default -> null;
-        };
-
-        if (newStatus == null) {
-            System.out.println("⚠ Invalid status choice.");
-            return;
+        System.out.println("\n--- Rooms with status '" + status + "' ---");
+        for (Room room : rooms) {
+            System.out.printf("ID=%d | Room %s | Floor %d | Type: %s | Status: %s\n",
+                    room.getRoomId(),
+                    room.getRoomNumber(),
+                    room.getFloorNumber(),
+                    room.getRoomType().getTypeName(),
+                    room.getStatus());
         }
+    }
 
+    private void updateRoomStatus() {
         try {
-            roomService.updateRoomStatus(room.getRoomId(), newStatus);
-            System.out.println("✓ Room status updated to: " + newStatus);
+            System.out.print("Room ID: ");
+            Long id = Long.parseLong(scanner.nextLine().trim());
+
+            System.out.print("New Status (AVAILABLE/OCCUPIED/UNDER_CLEANING/OUT_OF_SERVICE): ");
+            String status = scanner.nextLine().trim();
+
+            roomService.updateRoomStatus(id, status);
+            System.out.println("✅ Room status updated.");
+        } catch (NumberFormatException e) {
+            System.out.println("⚠ Error: Invalid number format.");
         } catch (Exception e) {
             System.out.println("⚠ Error: " + e.getMessage());
         }
@@ -350,38 +249,66 @@ public class RoomManagementConsole {
 
     // ============ UC7: Manage Room Pricing ============
 
-    private void manageRoomPricing() {
-        System.out.println("\n▸ MANAGE ROOM PRICING");
-
+    private void viewRoomTypePricing() {
         List<RoomType> types = roomService.getAllRoomTypes();
         if (types.isEmpty()) {
-            System.out.println("  No room types available.");
+            System.out.println("No room types found.");
             return;
         }
 
-        System.out.println("\nRoom Types:");
-        for (RoomType type : types) {
-            System.out.printf("  %d. %s - $%.2f/night (Tax: %.1f%%)\n",
-                    type.getRoomTypeId(), type.getTypeName(),
-                    type.getBasePrice(), type.getTaxRate().multiply(BigDecimal.valueOf(100)));
+        System.out.println("\n┌───────────────────────────────────────────────────────┐");
+        System.out.println("│                 ROOM TYPE PRICING                     │");
+        System.out.println("├─────┬─────────────────┬──────────────┬───────────────┤");
+        System.out.println("│ ID  │ Type Name       │ Base Price   │ Max Guests    │");
+        System.out.println("├─────┼─────────────────┼──────────────┼───────────────┤");
+
+        for (RoomType t : types) {
+            System.out.printf("│ %-3d │ %-15s │ $%-11s │ %-13d │\n",
+                    t.getRoomTypeId(),
+                    t.getTypeName(),
+                    t.getBasePrice(),
+                    t.getMaxOccupancy());
+        }
+        System.out.println("└─────┴─────────────────┴──────────────┴───────────────┘");
+    }
+
+    private void updateRoomTypePricing() {
+        List<RoomType> types = roomService.getAllRoomTypes();
+        if (types.isEmpty()) {
+            System.out.println("No room types available.");
+            return;
+        }
+
+        System.out.println("\n--- Current Room Type Pricing ---");
+        for (RoomType t : types) {
+            System.out.printf("  ID=%d | %s | Current Price: $%s/night\n",
+                    t.getRoomTypeId(), t.getTypeName(), t.getBasePrice());
         }
 
         try {
-            System.out.print("\nSelect Room Type ID to Update Pricing: ");
+            System.out.print("\nRoom Type ID to update: ");
             Long roomTypeId = Long.parseLong(scanner.nextLine().trim());
 
-            System.out.print("New Base Price: $");
+            Optional<RoomType> roomTypeOpt = types.stream()
+                    .filter(t -> t.getRoomTypeId().equals(roomTypeId))
+                    .findFirst();
+
+            if (roomTypeOpt.isEmpty()) {
+                System.out.println("⚠ Room type not found.");
+                return;
+            }
+
+            RoomType roomType = roomTypeOpt.get();
+            System.out.println("Current price for " + roomType.getTypeName() + ": $" + roomType.getBasePrice());
+
+            System.out.print("New Base Price per night: $");
             BigDecimal newPrice = new BigDecimal(scanner.nextLine().trim());
 
-            System.out.print("New Tax Rate (e.g., 0.10 for 10%): ");
-            BigDecimal newTaxRate = new BigDecimal(scanner.nextLine().trim());
+            roomService.updateRoomPricing(roomTypeId, newPrice, null);
+            System.out.println("✅ Price updated successfully. New price: $" + newPrice + "/night");
 
-            RoomType updated = roomService.updateRoomPricing(roomTypeId, newPrice, newTaxRate);
-            System.out.println("✓ Pricing updated successfully!");
-            System.out.printf("  %s: $%.2f/night (Tax: %.1f%%)\n",
-                    updated.getTypeName(), updated.getBasePrice(),
-                    updated.getTaxRate().multiply(BigDecimal.valueOf(100)));
-
+        } catch (NumberFormatException e) {
+            System.out.println("⚠ Error: Invalid number format.");
         } catch (Exception e) {
             System.out.println("⚠ Error: " + e.getMessage());
         }
@@ -390,14 +317,12 @@ public class RoomManagementConsole {
     // ============ UC8: Display Room Availability ============
 
     private void displayRoomAvailability() {
-        System.out.println("\n▸ ROOM AVAILABILITY");
-
         try {
-            System.out.print("Check-in Date (yyyy-MM-dd): ");
+            System.out.print("Check-in Date (YYYY-MM-DD): ");
             String checkInStr = scanner.nextLine().trim();
             LocalDate checkIn = LocalDate.parse(checkInStr, dateFormatter);
 
-            System.out.print("Check-out Date (yyyy-MM-dd): ");
+            System.out.print("Check-out Date (YYYY-MM-DD): ");
             String checkOutStr = scanner.nextLine().trim();
             LocalDate checkOut = LocalDate.parse(checkOutStr, dateFormatter);
 
@@ -409,26 +334,22 @@ public class RoomManagementConsole {
             List<Room> availableRooms = roomService.getAvailableRooms(checkIn, checkOut);
 
             if (availableRooms.isEmpty()) {
-                System.out.println("  No rooms available for the selected dates.");
+                System.out.println("No available rooms for this date range.");
                 return;
             }
 
-            System.out.printf("\n▸ Available Rooms (%s to %s)\n", checkInStr, checkOutStr);
-            System.out.println("\n┌──────┬────────┬─────────────────┬────────────┐");
-            System.out.println("│ Room │ Floor  │ Type            │ Price/Night│");
-            System.out.println("├──────┼────────┼─────────────────┼────────────┤");
-
+            System.out.println("\n--- Available Rooms ---");
             for (Room room : availableRooms) {
-                System.out.printf("│ %-4s │ %-6d │ %-15s │ $%-9.2f │\n",
+                System.out.printf("ID=%d | Room %s | Floor %d | Type: %s | Status: %s\n",
+                        room.getRoomId(),
                         room.getRoomNumber(),
                         room.getFloorNumber(),
                         room.getRoomType().getTypeName(),
-                        room.getRoomType().getBasePrice());
+                        room.getStatus());
             }
-            System.out.println("└──────┴────────┴─────────────────┴────────────┘");
 
         } catch (DateTimeParseException e) {
-            System.out.println("⚠ Invalid date format. Use yyyy-MM-dd.");
+            System.out.println("⚠ Invalid date format. Use YYYY-MM-DD.");
         } catch (Exception e) {
             System.out.println("⚠ Error: " + e.getMessage());
         }

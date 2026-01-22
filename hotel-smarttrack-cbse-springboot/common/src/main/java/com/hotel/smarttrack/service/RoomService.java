@@ -80,6 +80,16 @@ public interface RoomService {
     void updateRoomStatus(Long roomId, String status);
 
     /**
+     * Get rooms by status.
+     * 
+     * @param status Room status
+     * @return List of rooms with the specified status
+     */
+    List<Room> getRoomsByStatus(String status);
+
+    // ============ Room Availability Operations ============
+
+    /**
      * Get available rooms for date range.
      */
     List<Room> getAvailableRooms(LocalDate checkIn, LocalDate checkOut);
